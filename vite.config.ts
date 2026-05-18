@@ -9,7 +9,9 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
-  base: '/',
+  // 匹配 GitHub 仓库名，部署后访问路径为 /Tingfeng/
+  // 等自定义域名 DNS 生效后改回 '/'
+  base: '/Tingfeng/',
   build: {
     outDir: 'dist',
     rollupOptions: {
