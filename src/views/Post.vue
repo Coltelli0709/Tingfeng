@@ -34,12 +34,13 @@
                 class="post-article__tag"
               >{{ tag }}</span>
             </div>
-            <!-- 封面图 -->
+            <!-- 封面图（加载失败时隐藏） -->
             <img
-              v-if="post.cover"
+              v-if="showPostCover"
               :src="post.cover"
               :alt="post.title"
               class="post-article__cover"
+              @error="postCoverBroken = true"
             />
           </header>
 
@@ -84,6 +85,11 @@ const route = useRoute()
 
 const loading = ref(true)
 const post = ref<(typeof allPosts)[number] | null>(null)
+const postCoverBroken = ref(false)
+
+const showPostCover = computed(
+  () => !!post.value?.cover && !postCoverBroken.value,
+)
 
 // 上下篇导航
 const currentIndex = computed(() =>
@@ -100,6 +106,7 @@ const nextPost = computed(() =>
 
 function loadPost(slug: string | string[]) {
   loading.value = true
+  postCoverBroken.value = false
   const s = Array.isArray(slug) ? slug[0] : slug
   post.value = getPostBySlug(s) ?? null
   if (post.value) {

@@ -1,8 +1,13 @@
 <template>
   <article class="article-card" @click="goPost">
-    <!-- 封面图 -->
-    <div v-if="post.cover" class="article-card__cover">
-      <img :src="post.cover" :alt="post.title" loading="lazy" />
+    <!-- 封面图（加载失败时隐藏） -->
+    <div v-if="showCover" class="article-card__cover">
+      <img
+        :src="post.cover"
+        :alt="post.title"
+        loading="lazy"
+        @error="coverBroken = true"
+      />
     </div>
 
     <!-- 文字信息 -->
@@ -27,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PostWithContent } from '@/utils/posts'
 
@@ -35,6 +41,9 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
+const coverBroken = ref(false)
+
+const showCover = computed(() => !!props.post.cover && !coverBroken.value)
 
 function goPost() {
   router.push(`/post/${props.post.slug}`)

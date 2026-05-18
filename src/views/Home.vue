@@ -37,6 +37,15 @@
       <div v-if="filteredPosts.length === 0" class="home__empty">
         <p>暂无文章</p>
       </div>
+
+      <!-- 访客统计 -->
+      <footer class="home__footer">
+        <p class="home__footer-text">
+          湿润的风，已拂过
+          <span id="busuanzi_value_site_pv" class="home__footer-count" />
+          张脸。
+        </p>
+      </footer>
     </div>
   </div>
 </template>
@@ -127,5 +136,24 @@ function onCategorySelect(cat: string) {
 .post-list-enter-from {
   opacity: 0;
   transform: translateY(12px);
+}
+
+/* 访客统计 */
+.home__footer {
+  margin-top: 64px;
+  padding: 24px 0 12px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.home__footer-text {
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  letter-spacing: 0.03em;
+}
+
+.home__footer-count {
+  color: var(--blue-500);
+  font-weight: 600;
 }
 </style>
