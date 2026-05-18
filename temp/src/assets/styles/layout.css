@@ -1,0 +1,134 @@
+/* ===== 布局与响应式 ===== */
+
+/* 竹屋主场景全屏容器 */
+.room-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  /* 使用 16:10 的比例约束，防止物件在超宽屏上偏移 */
+  max-height: calc(100vw * 10 / 16);
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+@media (min-aspect-ratio: 16/10) {
+  .room-container {
+    max-height: 100vh;
+    max-width: calc(100vh * 16 / 10);
+  }
+}
+
+/* 竹屋全景底图 */
+.room-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 竹屋场景内所有物件定位容器 */
+.room-objects-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* 页面标题栏（子页面通用） */
+.bamboo-header {
+  position: relative;
+  padding: clamp(16px, 4vw, 32px) clamp(20px, 5vw, 40px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(
+    180deg,
+    rgba(45, 74, 34, 0.12) 0%,
+    transparent 100%
+  );
+}
+
+.bamboo-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(45, 74, 34, 0.08);
+  border: 1px solid rgba(45, 74, 34, 0.2);
+  border-radius: 6px;
+  font-family: 'FangSong', '仿宋', 'STFangsong', serif;
+  font-size: clamp(13px, 1.4vw, 15px);
+  color: #3a4a2a;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.bamboo-back-btn:hover {
+  background: rgba(45, 74, 34, 0.15);
+  border-color: rgba(45, 74, 34, 0.35);
+}
+
+.bamboo-page-title {
+  font-family: 'FangSong', '仿宋', 'STFangsong', serif;
+  font-size: clamp(18px, 2.5vw, 28px);
+  color: #2d3a1a;
+  font-weight: normal;
+  letter-spacing: 0.08em;
+}
+
+/* 子页面内容区 */
+.bamboo-content {
+  position: relative;
+  padding: 0 clamp(20px, 5vw, 40px) clamp(40px, 8vw, 60px);
+  max-width: 900px;
+  margin: 0 auto;
+  overflow-y: auto;
+  height: calc(100vh - 100px);
+}
+
+/* 竹纹理背景卡片 */
+.bamboo-card {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 240, 225, 0.9) 0%,
+    rgba(240, 235, 215, 0.85) 50%,
+    rgba(235, 228, 208, 0.9) 100%
+  );
+  border: 1px solid rgba(139, 119, 80, 0.15);
+  border-radius: 8px;
+  padding: clamp(16px, 3vw, 28px);
+  margin-bottom: clamp(12px, 2vw, 20px);
+  box-shadow:
+    0 2px 12px rgba(45, 74, 34, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bamboo-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 20px rgba(45, 74, 34, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* 纸页翻转动画 */
+@keyframes page-flip {
+  0% {
+    transform: perspective(600px) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(600px) rotateY(-180deg);
+  }
+}
+
+.page-flip-enter-active {
+  animation: page-flip 0.5s ease-in-out;
+}
