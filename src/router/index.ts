@@ -1,11 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '@/views/Home.vue'
 
-// 必须与 vite.config.ts 中的 base 保持一致
-const BASE = '/Tingfeng/'
-
 const router = createRouter({
-  history: createWebHistory(BASE),
+  history: createWebHistory(),
   routes: [
     {
       path: '/',
