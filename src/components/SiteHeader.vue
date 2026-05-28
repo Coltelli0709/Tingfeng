@@ -1,21 +1,49 @@
 <template>
-  <header class="site-header">
+  <header ref="headerRef" class="site-header">
     <div class="site-header__inner container">
       <router-link to="/" class="site-header__logo">
-        <span class="site-header__brand">听风</span>
-        <span class="site-header__sep">·</span>
-        <span class="site-header__tagline">Coltelli 的一隅自留地</span>
+        <span ref="brandRef" class="site-header__brand">听风</span>
+        <span ref="sepRef" class="site-header__sep">·</span>
+        <span ref="taglineRef" class="site-header__tagline">Coltelli 的一隅自留地</span>
       </router-link>
-      <nav class="site-header__nav">
-        <router-link to="/" class="site-header__link" active-class="site-header__link--active">
-          文章
-        </router-link>
+      <nav ref="navRef" class="site-header__nav">
+        <router-link to="/" class="site-header__link">文章</router-link>
       </nav>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import gsap from 'gsap'
+
+const headerRef = ref<HTMLElement>()
+const brandRef = ref<HTMLElement>()
+const sepRef = ref<HTMLElement>()
+const taglineRef = ref<HTMLElement>()
+const navRef = ref<HTMLElement>()
+
+onMounted(() => {
+  const mm = gsap.matchMedia()
+
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    // 导航栏内部元素依次滑入
+    const tl = gsap.timeline({ defaults: { duration: 0.5, ease: 'power2.out' } })
+    tl.from(brandRef.value, { y: -12, autoAlpha: 0 })
+      .from(sepRef.value, { autoAlpha: 0 }, '-=0.3')
+      .from(taglineRef.value, { x: -8, autoAlpha: 0 }, '-=0.25')
+      .from(navRef.value, { y: -8, autoAlpha: 0 }, '-=0.3')
+
+    return () => tl.kill()
+  })
+
+  // header 底部边框淡入
+  gsap.fromTo(
+    headerRef.value,
+    { borderBottomColor: 'rgba(226, 232, 240, 0)' },
+    { borderBottomColor: 'rgba(226, 232, 240, 1)', duration: 0.6, ease: 'power1.out' },
+  )
+})
 </script>
 
 <style scoped>
@@ -72,18 +100,11 @@
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   color: var(--gray-600);
-  transition: all 0.2s;
   text-decoration: none;
 }
 
 .site-header__link:hover {
   color: var(--blue-700);
   background: var(--blue-50);
-}
-
-.site-header__link--active {
-  color: var(--blue-700);
-  background: var(--blue-50);
-  font-weight: 600;
 }
 </style>

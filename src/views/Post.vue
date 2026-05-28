@@ -16,9 +16,9 @@
 
       <!-- 文章正文 -->
       <template v-else>
-        <article class="post-article">
+        <article ref="articleRef" class="post-article">
           <!-- 标题区 -->
-          <header class="post-article__header">
+          <header ref="headerRef" class="post-article__header">
             <div class="post-article__meta">
               <time>{{ post.date }}</time>
               <span class="post-article__category">{{ post.category }}</span>
@@ -45,12 +45,12 @@
           </header>
 
           <!-- Markdown 正文 -->
-          <section class="post-article__body">
+          <section ref="bodyRef" class="post-article__body">
             <MarkdownRenderer :content="post.content" />
           </section>
 
           <!-- 底部导航 -->
-          <footer class="post-article__footer">
+          <footer ref="footerRef" class="post-article__footer">
             <router-link to="/" class="post-article__back-link">
               ← 返回文章列表
             </router-link>
@@ -76,8 +76,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
+import gsap from 'gsap'
 import { allPosts, getPostBySlug } from '@/utils/posts'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 
@@ -87,11 +88,15 @@ const loading = ref(true)
 const post = ref<(typeof allPosts)[number] | null>(null)
 const postCoverBroken = ref(false)
 
+const articleRef = ref<HTMLElement>()
+const headerRef = ref<HTMLElement>()
+const bodyRef = ref<HTMLElement>()
+const footerRef = ref<HTMLElement>()
+
 const showPostCover = computed(
   () => !!post.value?.cover && !postCoverBroken.value,
 )
 
-// 上下篇导航
 const currentIndex = computed(() =>
   post.value ? allPosts.findIndex((p) => p.slug === post.value!.slug) : -1,
 )
@@ -122,6 +127,43 @@ watch(
   },
   { immediate: true },
 )
+
+onMounted(() => {
+  // 动画在 post 就绪后触发
+  animateIn()
+})
+
+watch(post, async () => {
+  if (post.value) {
+    await nextTick()
+    animateIn()
+  }
+})
+
+let lastTween: gsap.core.Timeline | null = null
+
+function animateIn() {
+  if (!articleRef.value) return
+
+  lastTween?.kill()
+
+  const mm = gsap.matchMedia()
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    // 设初始态
+    gsap.set([headerRef.value, bodyRef.value, footerRef.value], {
+      autoAlpha: 0,
+      y: 16,
+    })
+
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.5 } })
+    tl.to(headerRef.value, { autoAlpha: 1, y: 0 })
+      .to(bodyRef.value, { autoAlpha: 1, y: 0 }, '-=0.3')
+      .to(footerRef.value, { autoAlpha: 1, y: 0 }, '-=0.2')
+
+    lastTween = tl
+    return () => tl.kill()
+  })
+}
 </script>
 
 <style scoped>

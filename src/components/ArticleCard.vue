@@ -1,5 +1,5 @@
 <template>
-  <article class="article-card" @click="goPost">
+  <article ref="cardRef" class="article-card" @mouseenter="onEnter" @mouseleave="onLeave" @click="goPost">
     <!-- 封面图（加载失败时隐藏） -->
     <div v-if="showCover" class="article-card__cover">
       <img
@@ -16,7 +16,7 @@
         <time class="article-card__date">{{ post.date }}</time>
         <span class="article-card__category">{{ post.category }}</span>
       </div>
-      <h2 class="article-card__title">{{ post.title }}</h2>
+      <h2 ref="titleRef" class="article-card__title">{{ post.title }}</h2>
       <p v-if="post.description" class="article-card__desc">
         {{ post.description }}
       </p>
@@ -32,8 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import gsap from 'gsap'
 import type { PostWithContent } from '@/utils/posts'
 
 const props = defineProps<{
@@ -42,11 +43,53 @@ const props = defineProps<{
 
 const router = useRouter()
 const coverBroken = ref(false)
+const cardRef = ref<HTMLElement>()
+const titleRef = ref<HTMLElement>()
 
 const showCover = computed(() => !!props.post.cover && !coverBroken.value)
 
 function goPost() {
   router.push(`/post/${props.post.slug}`)
+}
+
+let hoverTween: gsap.core.Tween | null = null
+let titleTween: gsap.core.Tween | null = null
+
+function onEnter() {
+  const mm = gsap.matchMedia()
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    hoverTween = gsap.to(cardRef.value, {
+      y: -3,
+      boxShadow: '0 6px 28px rgba(37, 99, 235, 0.10)',
+      borderColor: '#60a5fa',
+      duration: 0.3,
+      ease: 'power2.out',
+    })
+    titleTween = gsap.to(titleRef.value, {
+      color: '#2563eb',
+      duration: 0.3,
+      ease: 'power1.out',
+    })
+    return () => {
+      hoverTween?.kill()
+      titleTween?.kill()
+    }
+  })
+}
+
+function onLeave() {
+  gsap.to(cardRef.value, {
+    y: 0,
+    boxShadow: '0 0 0 rgba(0,0,0,0)',
+    borderColor: '#e2e8f0',
+    duration: 0.3,
+    ease: 'power2.out',
+  })
+  gsap.to(titleRef.value, {
+    color: '#0f172a',
+    duration: 0.3,
+    ease: 'power1.out',
+  })
 }
 </script>
 
@@ -57,13 +100,6 @@ function goPost() {
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.article-card:hover {
-  border-color: var(--blue-500);
-  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
-  transform: translateY(-2px);
 }
 
 .article-card__cover {
@@ -77,11 +113,6 @@ function goPost() {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  transition: transform 0.4s ease;
-}
-
-.article-card:hover .article-card__cover img {
-  transform: scale(1.03);
 }
 
 .article-card__body {
@@ -117,11 +148,6 @@ function goPost() {
   color: var(--gray-900);
   line-height: 1.4;
   margin-bottom: 8px;
-  transition: color 0.2s;
-}
-
-.article-card:hover .article-card__title {
-  color: var(--blue-700);
 }
 
 .article-card__desc {
