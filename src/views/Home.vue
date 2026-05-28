@@ -1,6 +1,9 @@
 <template>
-  <div ref="pageRef" class="home">
-    <div class="container">
+  <div class="home">
+    <!-- 鱼群背景 -->
+    <FishSwarm />
+
+    <div ref="pageRef" class="container home__content">
       <!-- 页面标题 -->
       <div ref="heroRef" class="home__hero">
         <h1 class="home__title">文章</h1>
@@ -60,6 +63,7 @@ import gsap from 'gsap'
 import { allPosts, allCategories } from '@/utils/posts'
 import CategoryTabs from '@/components/CategoryTabs.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
+import FishSwarm from '@/components/FishSwarm.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,9 +144,16 @@ onMounted(async () => {
 
 <style scoped>
 .home {
+  position: relative;
+  z-index: 1;
   padding-top: 32px;
   padding-bottom: 64px;
   min-height: calc(100vh - var(--header-height));
+}
+
+.home__content {
+  position: relative;
+  z-index: 2;
 }
 
 .home__hero {
