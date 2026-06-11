@@ -25,6 +25,40 @@
         />
       </div>
 
+      <!-- 时间筛选 -->
+      <div ref="dateFilterRef" class="home__date-filter">
+        <label class="home__date-label">
+          <span>从</span>
+          <input
+            v-model="dateStart"
+            class="home__date-input"
+            type="text"
+            maxlength="6"
+            placeholder="YYMMDD"
+            @input="onDateInput"
+          />
+        </label>
+        <span class="home__date-sep">—</span>
+        <label class="home__date-label">
+          <span>到</span>
+          <input
+            v-model="dateEnd"
+            class="home__date-input"
+            type="text"
+            maxlength="6"
+            placeholder="YYMMDD"
+            @input="onDateInput"
+          />
+        </label>
+        <button
+          v-if="dateStart || dateEnd"
+          class="home__date-clear"
+          @click="clearDate"
+        >
+          清除
+        </button>
+      </div>
+
       <!-- 文章列表 -->
       <TransitionGroup
         name="post-list"
@@ -60,7 +94,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
-import { allPosts, allCategories } from '@/utils/posts'
+import { allPosts, allCategories, filterByDateRange } from '@/utils/posts'
 import CategoryTabs from '@/components/CategoryTabs.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 import FishSwarm from '@/components/FishSwarm.vue'
@@ -71,16 +105,27 @@ const router = useRouter()
 const pageRef = ref<HTMLElement>()
 const heroRef = ref<HTMLElement>()
 const tabsRef = ref<HTMLElement>()
+const dateFilterRef = ref<HTMLElement>()
 const listRef = ref<InstanceType<typeof TransitionGroup>>()
 const footerRef = ref<HTMLElement>()
 
 const activeCategory = ref<string>(
   (route.query.cat as string) || '全部',
 )
+const dateStart = ref('')
+const dateEnd = ref('')
 
 const filteredPosts = computed(() => {
-  if (activeCategory.value === '全部') return allPosts
-  return allPosts.filter((p) => p.category === activeCategory.value)
+  // 先按分类筛
+  let posts = activeCategory.value === '全部'
+    ? allPosts
+    : allPosts.filter((p) => p.category === activeCategory.value)
+
+  // 再按时间筛
+  if (dateStart.value || dateEnd.value) {
+    posts = filterByDateRange(posts, dateStart.value, dateEnd.value)
+  }
+  return posts
 })
 
 const countMap = computed(() => {
@@ -95,6 +140,16 @@ const countMap = computed(() => {
 function onCategorySelect(cat: string) {
   activeCategory.value = cat
   router.replace({ query: cat === '全部' ? {} : { cat } })
+}
+
+function onDateInput() {
+  dateStart.value = dateStart.value.replace(/\D/g, '').slice(0, 6)
+  dateEnd.value = dateEnd.value.replace(/\D/g, '').slice(0, 6)
+}
+
+function clearDate() {
+  dateStart.value = ''
+  dateEnd.value = ''
 }
 
 onMounted(async () => {
@@ -114,7 +169,7 @@ onMounted(async () => {
 
       if (reduceMotion) {
         // 仅淡入，无位移
-        gsap.set([heroRef.value, tabsRef.value, footerRef.value], { autoAlpha: 1 })
+        gsap.set([heroRef.value, tabsRef.value, dateFilterRef.value, footerRef.value], { autoAlpha: 1 })
         gsap.set(listRef.value?.$el?.children ?? [], { autoAlpha: 1 })
         return
       }
@@ -126,6 +181,7 @@ onMounted(async () => {
       // 先设初始态
       gsap.set(heroRef.value, { y: dist, autoAlpha: 0 })
       gsap.set(tabsRef.value, { y: dist * 0.6, autoAlpha: 0 })
+      gsap.set(dateFilterRef.value, { y: dist * 0.5, autoAlpha: 0 })
       gsap.set(children, { y: dist, autoAlpha: 0 })
       gsap.set(footerRef.value, { autoAlpha: 0 })
 
@@ -133,6 +189,7 @@ onMounted(async () => {
       const tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.55 } })
       tl.to(heroRef.value, { y: 0, autoAlpha: 1 })
         .to(tabsRef.value, { y: 0, autoAlpha: 1 }, '-=0.35')
+        .to(dateFilterRef.value, { y: 0, autoAlpha: 1 }, '-=0.3')
         .to(children, { y: 0, autoAlpha: 1, stagger: staggerTime }, '-=0.25')
         .to(footerRef.value, { autoAlpha: 1 }, '-=0.15')
 
@@ -195,6 +252,70 @@ onMounted(async () => {
 .post-list-enter-from {
   opacity: 0;
   transform: translateY(12px);
+}
+
+/* 时间筛选 */
+.home__date-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.home__date-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+
+.home__date-input {
+  width: 80px;
+  padding: 5px 8px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--gray-800);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  text-align: center;
+  letter-spacing: 0.08em;
+  transition: border-color 0.2s;
+}
+
+.home__date-input:focus {
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 2px var(--blue-100);
+}
+
+.home__date-input::placeholder {
+  color: var(--gray-300);
+  letter-spacing: 0.04em;
+}
+
+.home__date-sep {
+  color: var(--gray-400);
+  font-size: 0.9rem;
+}
+
+.home__date-clear {
+  padding: 4px 10px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.home__date-clear:hover {
+  color: var(--blue-700);
+  border-color: var(--blue-500);
 }
 
 /* 访客统计 */
