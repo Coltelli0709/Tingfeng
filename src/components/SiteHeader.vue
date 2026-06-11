@@ -7,15 +7,38 @@
         <span ref="taglineRef" class="site-header__tagline">Coltelli 的一隅自留地</span>
       </router-link>
       <nav ref="navRef" class="site-header__nav">
-        <router-link to="/" class="site-header__link">文章</router-link>
+        <router-link
+          v-for="cat in navCategories"
+          :key="cat"
+          :to="cat === allLink ? '/' : `/?cat=${cat}`"
+          class="site-header__link"
+          :class="{ 'site-header__link--active': isActive(cat) }"
+        >
+          {{ cat }}
+        </router-link>
       </nav>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import gsap from 'gsap'
+import { allCategories } from '@/utils/posts'
+
+const allLink = '所有'
+
+const navCategories = computed(() => {
+  return [allLink, ...allCategories.filter((c) => c !== '全部')]
+})
+
+const route = useRoute()
+
+function isActive(cat: string): boolean {
+  if (cat === allLink) return !route.query.cat
+  return route.query.cat === cat
+}
 
 const headerRef = ref<HTMLElement>()
 const brandRef = ref<HTMLElement>()
