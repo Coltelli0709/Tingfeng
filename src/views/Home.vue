@@ -9,8 +9,9 @@
         <h1 class="home__title">文章</h1>
         <p class="home__subtitle">
           共 {{ filteredPosts.length }} 篇
+          <template v-if="activeSection"> · {{ activeSection }}</template>
           <template v-if="activeCategory !== '全部'">
-            · {{ activeCategory }}
+            / {{ activeCategory }}
           </template>
         </p>
       </div>
@@ -18,7 +19,7 @@
       <!-- 分类筛选 -->
       <div ref="tabsRef" class="home__tabs-wrap">
         <CategoryTabs
-          :categories="allCategories"
+          :categories="categoriesWithinSection"
           :active="activeCategory"
           :count-map="countMap"
           @select="onCategorySelect"
@@ -27,36 +28,45 @@
 
       <!-- 时间筛选 -->
       <div ref="dateFilterRef" class="home__date-filter">
-        <label class="home__date-label">
-          <span>从</span>
-          <input
-            v-model="dateStart"
-            class="home__date-input"
-            type="text"
-            maxlength="6"
-            placeholder="YYMMDD"
-            @input="onDateInput"
-          />
-        </label>
-        <span class="home__date-sep">—</span>
-        <label class="home__date-label">
-          <span>到</span>
-          <input
-            v-model="dateEnd"
-            class="home__date-input"
-            type="text"
-            maxlength="6"
-            placeholder="YYMMDD"
-            @input="onDateInput"
-          />
-        </label>
-        <button
-          v-if="dateStart || dateEnd"
-          class="home__date-clear"
-          @click="clearDate"
-        >
-          清除
+        <button class="home__date-toggle" @click="showDateFilter = !showDateFilter">
+          {{ showDateFilter ? '收起时间' : '时间筛选' }}
         </button>
+
+        <div v-if="showDateFilter" class="home__date-panel">
+          <div class="home__date-row">
+            <label class="home__date-label">
+              <span>从</span>
+              <input
+                v-model="dateStart"
+                class="home__date-input"
+                type="text"
+                maxlength="6"
+                placeholder="YYMMDD"
+                @input="onDateInput"
+              />
+            </label>
+            <span class="home__date-sep">—</span>
+            <label class="home__date-label">
+              <span>到</span>
+              <input
+                v-model="dateEnd"
+                class="home__date-input"
+                type="text"
+                maxlength="6"
+                placeholder="YYMMDD"
+                @input="onDateInput"
+              />
+            </label>
+            <button
+              v-if="dateStart || dateEnd"
+              class="home__date-clear"
+              @click="clearDate"
+            >
+              清除
+            </button>
+          </div>
+          <p class="home__date-hint">时间格式为 yymmdd，例如：070407</p>
+        </div>
       </div>
 
       <!-- 文章列表 -->
@@ -91,10 +101,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
-import { allPosts, allCategories, filterByDateRange } from '@/utils/posts'
+import { allPosts, filterByDateRange } from '@/utils/posts'
 import CategoryTabs from '@/components/CategoryTabs.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 import FishSwarm from '@/components/FishSwarm.vue'
@@ -109,17 +119,54 @@ const dateFilterRef = ref<HTMLElement>()
 const listRef = ref<InstanceType<typeof TransitionGroup>>()
 const footerRef = ref<HTMLElement>()
 
-const activeCategory = ref<string>(
-  (route.query.cat as string) || '全部',
+/* ---- 版块（来自导航栏 /?section=）---- */
+const activeSection = ref<string>('')
+
+watch(
+  () => route.query.section as string | undefined,
+  (s) => { activeSection.value = s ?? '' },
+  { immediate: true },
 )
+
+/* 当前版块下的文章 */
+const sectionPosts = computed(() => {
+  if (!activeSection.value) return allPosts
+  return allPosts.filter((p) => p.section === activeSection.value)
+})
+
+/* ---- 子分类标签（来自 frontmatter category）---- */
+const activeCategory = ref<string>('全部')
+
+// 版块切换时重置子分类
+watch(activeSection, () => { activeCategory.value = '全部' })
+
+const categoriesWithinSection = computed(() => {
+  const set = new Set<string>()
+  for (const p of sectionPosts.value) {
+    if (p.category) set.add(p.category)
+  }
+  return ['全部', ...Array.from(set)]
+})
+
+const countMap = computed(() => {
+  const map: Record<string, number> = { 全部: sectionPosts.value.length }
+  for (const p of sectionPosts.value) {
+    const c = p.category || '未分类'
+    map[c] = (map[c] || 0) + 1
+  }
+  return map
+})
+
+/* ---- 组合筛选 ---- */
 const dateStart = ref('')
 const dateEnd = ref('')
+const showDateFilter = ref(false)
 
 const filteredPosts = computed(() => {
-  // 先按分类筛
+  // 先按子分类筛
   let posts = activeCategory.value === '全部'
-    ? allPosts
-    : allPosts.filter((p) => p.category === activeCategory.value)
+    ? sectionPosts.value
+    : sectionPosts.value.filter((p) => p.category === activeCategory.value)
 
   // 再按时间筛
   if (dateStart.value || dateEnd.value) {
@@ -128,18 +175,12 @@ const filteredPosts = computed(() => {
   return posts
 })
 
-const countMap = computed(() => {
-  const map: Record<string, number> = { 全部: allPosts.length }
-  for (const p of allPosts) {
-    const c = p.category || '未分类'
-    map[c] = (map[c] || 0) + 1
-  }
-  return map
-})
-
 function onCategorySelect(cat: string) {
   activeCategory.value = cat
-  router.replace({ query: cat === '全部' ? {} : { cat } })
+  const q: Record<string, string> = {}
+  if (activeSection.value) q.section = activeSection.value
+  if (cat !== '全部') q.cat = cat
+  router.replace({ query: q })
 }
 
 function onDateInput() {
@@ -256,10 +297,38 @@ onMounted(async () => {
 
 /* 时间筛选 */
 .home__date-filter {
+  margin-bottom: 20px;
+}
+
+.home__date-toggle {
+  padding: 5px 14px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.home__date-toggle:hover {
+  color: var(--blue-700);
+  border-color: var(--blue-500);
+}
+
+.home__date-panel {
+  margin-top: 10px;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.home__date-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
@@ -277,7 +346,7 @@ onMounted(async () => {
   font-family: var(--font-sans);
   font-size: 0.85rem;
   color: var(--gray-800);
-  background: var(--white);
+  background: var(--gray-50);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   outline: none;
@@ -289,11 +358,11 @@ onMounted(async () => {
 .home__date-input:focus {
   border-color: var(--blue-600);
   box-shadow: 0 0 0 2px var(--blue-100);
+  background: var(--white);
 }
 
 .home__date-input::placeholder {
   color: var(--gray-300);
-  letter-spacing: 0.04em;
 }
 
 .home__date-sep {
@@ -316,6 +385,12 @@ onMounted(async () => {
 .home__date-clear:hover {
   color: var(--blue-700);
   border-color: var(--blue-500);
+}
+
+.home__date-hint {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--gray-400);
 }
 
 /* 访客统计 */

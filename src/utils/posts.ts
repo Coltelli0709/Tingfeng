@@ -1,15 +1,19 @@
 /**
  * posts.ts — 博客文章数据层
  *
- * 数据源：code/post/{分类}/{文章名}.md
- * 专栏名称即文件夹名称，文章路径自动决定 category
+ * 数据源：code/post/{版块}/{文章名}.md
+ *
+ * 两层分类体系：
+ *   section  → post/ 下的文件夹名（导航栏版块）
+ *   category → md 内 frontmatter 的 category（子分类标签）
  */
 
 export interface PostMeta {
   slug: string
   title: string
   date: string
-  category: string
+  section: string       // 文件夹名 → 导航栏
+  category: string      // frontmatter → 子分类标签
   cover?: string
   description: string
   tags: string[]
@@ -54,17 +58,12 @@ function parseFrontmatter(raw: string): {
 
 /* ===== 路径解析 ===== */
 
-/**
- * 从路径中提取分类和 slug
- * post/技术/xxx.md  →  category="技术",  slug="xxx"
- */
-function parsePath(path: string): { category: string; slug: string } {
+function parsePath(path: string): { section: string; slug: string } {
   const parts = path.replace(/\\/g, '/').replace(/^\/+/, '').split('/')
-  // parts: ["post", "技术", "xxx.md"]
   const fileName = parts[parts.length - 1]
   const slug = fileName.replace(/\.md$/i, '')
-  const category = parts.length >= 2 ? parts[parts.length - 2] : '未分类'
-  return { category, slug }
+  const section = parts.length >= 2 ? parts[parts.length - 2] : '未分类'
+  return { section, slug }
 }
 
 /* ===== 全局文章索引 ===== */
@@ -77,13 +76,14 @@ const rawModules: Record<string, string> = import.meta.glob(
 /** 所有解析后的文章（按日期降序） */
 export const allPosts: PostWithContent[] = Object.entries(rawModules)
   .map(([path, raw]) => {
-    const { category, slug } = parsePath(path)
+    const { section, slug } = parsePath(path)
     const { data, content } = parseFrontmatter(raw as string)
     return {
       slug,
       title: (data.title as string) || slug,
       date: (data.date as string) || '',
-      category,
+      section,
+      category: (data.category as string) || section,
       cover: data.cover as string | undefined,
       description: (data.description as string) || '',
       tags: (Array.isArray(data.tags) ? data.tags : []) as string[],
@@ -92,7 +92,16 @@ export const allPosts: PostWithContent[] = Object.entries(rawModules)
   })
   .sort((a, b) => b.date.localeCompare(a.date))
 
-/** 所有专栏（文件夹）名称 */
+/** 所有版块（post/ 下的文件夹名），用于导航栏 */
+export const allSections: string[] = (() => {
+  const set = new Set<string>()
+  for (const p of allPosts) {
+    if (p.section) set.add(p.section)
+  }
+  return Array.from(set)
+})()
+
+/** 所有子分类（frontmatter 的 category），用于标签筛选 */
 export const allCategories: string[] = (() => {
   const set = new Set<string>()
   for (const p of allPosts) {
@@ -101,7 +110,13 @@ export const allCategories: string[] = (() => {
   return ['全部', ...Array.from(set)]
 })()
 
-/** 按专栏筛选 */
+/** 按版块筛选（导航栏） */
+export function getPostsBySection(section: string): PostWithContent[] {
+  if (!section) return allPosts
+  return allPosts.filter((p) => p.section === section)
+}
+
+/** 按子分类筛选 */
 export function getPostsByCategory(category: string): PostWithContent[] {
   if (category === '全部' || !category) return allPosts
   return allPosts.filter((p) => p.category === category)
@@ -114,15 +129,10 @@ export function getPostBySlug(slug: string): PostWithContent | undefined {
 
 /* ===== 时间筛选 ===== */
 
-/**
- * 按起止日期筛选（含起止日，YYMMDD 格式）
- * 例：filterByDateRange(allPosts, '250101', '250531')
- *     只保留 date 在 2025-01-01 ~ 2025-05-31 之间的文章
- */
 export function filterByDateRange(
   posts: PostWithContent[],
-  start: string,  // YYMMDD
-  end: string,    // YYMMDD
+  start: string,
+  end: string,
 ): PostWithContent[] {
   const s = yymmddToIso(start)
   const e = yymmddToIso(end)
@@ -130,7 +140,6 @@ export function filterByDateRange(
   return posts.filter((p) => p.date >= s && p.date <= e)
 }
 
-/** YYMMDD → YYYY-MM-DD，无效返回 null */
 function yymmddToIso(yymmdd: string): string | null {
   const m = yymmdd.match(/^(\d{2})(\d{2})(\d{2})$/)
   if (!m) return null
