@@ -40,9 +40,9 @@
                 v-model="dateStart"
                 class="home__date-input"
                 type="text"
+                inputmode="numeric"
                 maxlength="6"
                 placeholder="YYMMDD"
-                @input="onDateInput"
               />
             </label>
             <span class="home__date-sep">—</span>
@@ -52,9 +52,9 @@
                 v-model="dateEnd"
                 class="home__date-input"
                 type="text"
+                inputmode="numeric"
                 maxlength="6"
                 placeholder="YYMMDD"
-                @input="onDateInput"
               />
             </label>
             <button
@@ -183,10 +183,14 @@ function onCategorySelect(cat: string) {
   router.replace({ query: q })
 }
 
-function onDateInput() {
-  dateStart.value = dateStart.value.replace(/\D/g, '').slice(0, 6)
-  dateEnd.value = dateEnd.value.replace(/\D/g, '').slice(0, 6)
-}
+watch(dateStart, (v) => {
+  const cleaned = v.replace(/\D/g, '').slice(0, 6)
+  if (v !== cleaned) dateStart.value = cleaned
+})
+watch(dateEnd, (v) => {
+  const cleaned = v.replace(/\D/g, '').slice(0, 6)
+  if (v !== cleaned) dateEnd.value = cleaned
+})
 
 function clearDate() {
   dateStart.value = ''
