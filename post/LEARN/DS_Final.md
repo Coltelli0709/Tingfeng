@@ -6,593 +6,515 @@ description: 但愿有用。
 tags: [数据结构, 复习]
 ---
 
+# 数据结构与程序设计
+
 ---
 
 ## 目录
 
-1. [C++ 基础拾遗](#1-c-基础拾遗)
-2. [指针、引用与动态内存](#2-指针引用与动态内存)
-3. [Stack —— 栈](#3-stack--栈)
-4. [Queue —— 队列](#4-queue--队列)
-5. [Linked List —— 链表](#5-linked-list--链表)
-6. [Recursion —— 递归与回溯](#6-recursion--递归与回溯)
-7. [Polynomial —— 多项式](#7-polynomial--多项式)
-8. [Template —— 模板](#8-template--模板)
-9. [Sorting —— 排序](#9-sorting--排序)
-10. [Hash Table —— 哈希表](#10-hash-table--哈希表)
-11. [Binary Tree —— 二叉树](#11-binary-tree--二叉树)
-12. [Binary Search Tree —— 二叉搜索树](#12-binary-search-tree--二叉搜索树)
-13. [AVL Tree —— 平衡二叉搜索树](#13-avl-tree--平衡二叉搜索树)
-14. [C++ OOP 进阶](#14-c-oop-进阶)
-15. [经典错误自查表](#15-经典错误自查表)
+1. [指针、引用与动态内存](#ch1-p)
+2. [Error_code 错误码体系](#ch2-e)
+3. [Stack 栈 —— 三种实现 + 括号匹配 + 逆波兰](#ch3-s)
+4. [Queue 队列 —— 循环队列 + 链队列 + 假溢出](#ch4-q)
+5. [Linked List 链表 —— 单链表 + 双链表 + 约瑟夫](#ch5-l)
+6. [Recursion 递归与回溯 —— 八皇后 + DFS 框架](#ch6-r)
+7. [Polynomial 多项式 —— 链表表示 + 加法](#ch7-po)
+8. [Template 模板 —— 函数模板 + 类模板 + 函数指针遍历](#ch8-t)
+9. [Sorting 排序 —— 六种排序全代码 + 对比表](#ch9-so)
+10. [Hash Table 哈希表 —— 二次探测 + 线性探测 + 链地址](#ch10-h)
+11. [Binary Tree 二叉树 —— 三遍历 + 高度](#ch11-b)
+12. [Binary Search Tree 二叉搜索树 —— 插入 + 三种删除 + BuildableTree](#ch12-bst)
+13. [AVL Tree 平衡二叉搜索树 —— 四种旋转 + 插入删除再平衡 + 课件七漏洞](#ch13-a)
+14. [C++ OOP 进阶 —— 深拷贝 + 三/五法则 + 继承](#ch14-oop)
+15. [经典错误自查表](#ch15-err)
 
 ---
 
-## 1. C++ 基础拾遗
+<a id="ch1-p"></a>
+## 1. 指针、引用与动态内存
 
-### 1.1 输入输出
+### 1.1 指针是「地址变量」
 
 ```cpp
-#include<bits/stdc++.h>
-using namespace std;
+int a = 10;            // a 是一个 int 变量，里面存着整数值 10
+int *p = &a;           // p 是一个指针变量，存的是 a 的内存地址
+                       // & 是取地址符：「&a」就是「a 的地址是多少」
+*p = 20;               // * 是解引用符：「*p」就是「去 p 存的地址那里，操作那个变量」
+                       // 等价于 a = 20
 
+// 多级指针：指针变量自己也有地址，也能被别的指针指着
+char **pp;             // 两个星号 = 二级指针 = 指向指针的指针
+```
+
+### 1.2 引用是「别名」
+
+```cpp
+int a = 5;
+int &ref = a;          // ref 不是新变量，是 a 的别名
+ref = 10;              // 等价于 a = 10
+
+// 最常见用法：函数参数传引用，函数内直接改外部变量
+void swap(int &x, int &y) { int t = x; x = y; y = t; }
+```
+
+**指针 vs 引用**：指针能换指向、能是 nullptr；引用初始化后不可换、必须绑定有效对象。
+
+### 1.3 动态内存 —— 堆上的手动空间
+
+```cpp
+int *p = new int;        // 在堆上申请 4 字节，返回地址
+*p = 42;
+delete p;                // 归还
+
+int *arr = new int[10];  // 申请数组
+delete[] arr;            // new/delete 和 new[]/delete[] 必须配对
+```
+
+链表、树的大小预先不确定，全靠 `new`/`delete` 在堆上生存。
+
+### 1.4 I/O 速查
+
+```cpp
 int n; double d; string s;
-cin >> n >> d;              // 用空格/换行分隔读入
-getline(cin, s);            // 读一整行（含空格）
-cout << n << " " << d;      // 连续输出
+cin >> n >> d;           // 空格/换行分隔
+getline(cin, s);         // 读整行
 
-// I/O 加速（大输入时必加）
+// ⚠️ cin>> 后直接 getline 会读到换行符残留！
+cin >> n;
+cin.ignore(numeric_limits<streamsize>::max(), '\n');
+getline(cin, s);
+
+// 大数据量加速
 ios::sync_with_stdio(false);
 cin.tie(nullptr);
 ```
 
-> **注意**：`cin >>` 后接 `getline` 前必须清理换行符：
-> ```cpp
-> cin >> n;
-> cin.ignore(numeric_limits<streamsize>::max(), '\n');
-> ```
-
-### 1.2 基本类型与常量
-
-```cpp
-int a = 2147483647;          // 2^31 - 1
-long long b = 1LL << 60;     // 大整数要加 LL
-const double PI = 3.1415926;
-const int MOD = 1e9 + 7;
-```
-
-### 1.3 字符串处理
-
-```cpp
-string s = "hello";
-s.size(); s.length();        // 长度
-s.substr(pos, len);          // 子串
-s.find(c);                   // 查找，返回下标或 string::npos
-
-// 字符串流
-stringstream ss(line);
-string word;
-while(ss >> word) { ... }
-```
-
 ---
 
 <details>
-<summary>📝 题目 1-1：输入输出基础</summary>
+<summary>📝 题目 1-1：推演二级指针</summary>
 
-**题目**：读入一个整数 n，再读入 n 个浮点数，用栈逆序输出。
-
-**答案**：
+**题目**：以下代码输出什么？
 
 ```cpp
-#include<bits/stdc++.h>
-using namespace std;
-
-int main(){
-    int n; double t;
-    stack<double> st;
-    cin >> n;
-    while(n--){
-        cin >> t;
-        st.push(t);
-    }
-    while(!st.empty()){
-        cout << st.top() << " ";
-        st.pop();
-    }
-    return 0;
-}
+char a='b', b='e';
+char *p1=&a, **p2=&p1;
+*p1='m'; *p2=&b; *p1='n';
+cout<<a<<b;
 ```
+
+**答案**：输出 **mn**。一步步推：
+
+| 步骤 | 效果 |
+|------|------|
+| p1=&a | p1 指向 a |
+| p2=&p1 | p2 指向 p1 |
+| *p1='m' | a='m' |
+| *p2=&b | 通过 p2 修改 p1→p1 改为指向 b |
+| *p1='n' | 此时 p1 指向 b → b='n' |
+
+a 始终是 'm'，b 变成了 'n'。
 
 </details>
 
 ---
 
-## 2. 指针、引用与动态内存
+<a id="ch2-e"></a>
+## 2. Error_code 错误码体系
 
-### 2.1 指针基础
-
-```cpp
-char ch = 'b';
-char *p = &ch;      // p 指向 ch
-*p = 'm';           // 解引用修改 ch
-
-char **p2 = &p1;    // 二级指针（指针的指针）
-*p2 = &ch2;         // 通过二级指针改变一级指针的指向
-```
-
-### 2.2 引用
+### 含义与定义
 
 ```cpp
-int a = 5;
-int &ref = a;       // ref 是 a 的别名
-ref = 10;           // 等价于 a = 10
-
-// 引用作为函数参数（可在函数内修改实参）
-void swap(int &a, int &b) {
-    int t = a; a = b; b = t;
-}
-
-// 引用作为返回值（避免拷贝）
-int &getElement(vector<int> &v, int i) {
-    return v[i];    // 返回左值引用
-}
-```
-
-**关键区别**：
-- 指针可以重新指向，引用一经初始化不可更改
-- 指针可以为 `nullptr`，引用必须绑定有效对象
-- 指针有多级（`**p`），引用没有"引用的引用"
-
-### 2.3 动态内存
-
-```cpp
-int *p = new int;           // 单个对象
-int *arr = new int[n];      // 数组
-delete p;                   // 释放单个
-delete[] arr;               // 释放数组
-
-// 链表结点
-struct Node {
-    int data;
-    Node *next;
-    Node(int d, Node *n = nullptr) : data(d), next(n) {}
+enum Error_code {
+    success,          // 操作成功 —— 常用
+    underflow,        // 下溢：空容器上取元素 —— 如空栈 pop
+    overflow,         // 上溢：满容器上放元素 —— 如满队列 push
+    range_error,      // 参数范围不对
+    not_present,      // 要找的东西不在 —— 如哈希表检索不到
+    duplicate_error   // 你插入一个已存在的 key
 };
-Node *head = new Node(5, nullptr);
-delete head;
 ```
 
----
+### 使用模式
 
-<details>
-<summary>📝 题目 2-1：指针与引用</summary>
-
-**题目**：解释以下代码的运行结果。
+函数返回 Error_code 表示状态，真正的数据通过引用参数传出来：
 
 ```cpp
-char ch1 = 'b';
-char ch2 = 'e';
-char *p1 = &ch1;
-char **p2 = &p1;
-*p1 = 'm';
-*p2 = &ch2;
-*p1 = 'n';
-cout << ch1 << ch2 << endl;
-```
-
-**答案**：
-
-逐行分析：
-1. `p1 = &ch1` → p1 指向 ch1
-2. `p2 = &p1` → p2 指向 p1（二级指针）
-3. `*p1 = 'm'` → ch1 变为 `'m'`
-4. `*p2 = &ch2` → 通过 p2 修改 p1 指向 ch2（p1 不再指向 ch1）
-5. `*p1 = 'n'` → 此时 p1 指向 ch2，所以 ch2 变为 `'n'`
-
-输出：`b n`
-
-</details>
-
----
-
-<details>
-<summary>📝 题目 2-2：引用参数</summary>
-
-**题目**：写出以下代码的输出结果。
-
-```cpp
-void func(int &x) { x += 10; }
-
-int main() {
-    int a = 5;
-    func(a);
-    cout << a << endl;
-    return 0;
+Error_code Stack::pop(int &val) {
+    if(empty()) return underflow;   // 「失败原因：空了」
+    val = data[top--];              // 通过引用传出实际值
+    return success;                 // 「成功取出来了」
 }
+
+// 调用方：
+int x;
+Error_code ec = st.pop(x);
+if(ec == success) cout << "pop 成功：" << x;
+else cout << "栈空无法 pop";
 ```
-
-**答案**：
-
-输出 `15`。因为 `x` 是 `a` 的引用，`x += 10` 实际修改了 `a`。
-
-</details>
 
 ---
 
-## 3. Stack —— 栈
+<a id="ch3-s"></a>
+## 3. Stack 栈
 
-### 3.1 基本性质
+### 核心概念
 
-- **LIFO**（Last In First Out）—— 后进先出
-- 只能在栈顶操作：push（入栈）、pop（出栈）、top（取栈顶）
-- 时间复杂度：所有操作 O(1)
+栈 = 一摞盘子。只能在最上面放（push），也只能从最上面取（pop）。最后放的最先被拿走 —— **LIFO**。
 
-### 3.2 C++ STL stack
+### 3.1 必须掌握的五种操作
+
+| 操作 | 做什么 | 返回值 |
+|------|--------|--------|
+| `push(x)` | 把 x 压入栈顶 | void 或 Error_code |
+| `pop()` | 删除栈顶元素 | void 或 Error_code |
+| `top()` | 只看栈顶，不删除 | 元素值 |
+| `empty()` | 栈空否 | bool |
+| `size()` | 几个元素 | int |
+
+> `pop()` 只删不返回！要拿值必须先 `top()` 再 `pop()`。
+
+### 3.2 实现一：STL stack（直接用）
 
 ```cpp
+#include <stack>
 stack<int> st;
-st.push(5);         // 入栈
-st.top();           // 取栈顶（不删除）
-st.pop();           // 出栈（无返回值）
-st.empty();         // 判空
-st.size();          // 元素个数
+st.push(10);             // 入
+st.push(20);
+cout << st.top();        // 看栈顶 → 20
+st.pop();                // 删栈顶
+cout << st.size();       // 个数 → 1
+cout << st.empty();      // 空否 → 0（false）
 ```
 
-### 3.3 数组实现栈
+### 3.3 实现二：数组栈（底层原理）
 
 ```cpp
-const int MAXN = 1000;
-int st[MAXN];
-int top = -1;         // 栈顶指针
+const int MAX = 1000;
+int arr[MAX];            // 存数据的数组
+int sp = -1;             // 栈顶指针，-1=空
 
-void push(int x) { st[++top] = x; }
-void pop() { top--; }
-int topVal() { return st[top]; }
-bool empty() { return top == -1; }
+void push(int x) { arr[++sp] = x; }     // 先上移指针再放值
+void pop()  { if(sp>=0) sp--; }         // 下移=逻辑删除
+int  top()  { return arr[sp]; }         // sp 指向的位置
+bool empty(){ return sp == -1; }        // 指针在-1就是空
+int  size() { return sp + 1; }          // 下标+1=个数
 ```
 
-### 3.4 链式栈
+**图演 push(1) push(2) pop()**：
+```
+sp=-1    push(1)    sp=0     push(2)    sp=1     pop()    sp=0
++---+              +---+              +---+              +---+
+| ? |              | 1 | ←sp          | 1 |              | 1 | ←sp
++---+              +---+              | 2 | ←sp          | 2 | (逻辑消失)
+| ? |              | ? |              +---+              +---+
++---+              +---+              | ? |
+                                       +---+
+```
+
+### 3.4 实现三：链式栈（不限容量）
 
 ```cpp
 struct Node {
-    int data;
-    Node *next;
-    Node(int d, Node *n = nullptr) : data(d), next(n) {}
+    int data;                     // 存的值
+    Node *next;                   // 指向下一个结点（往下的结点）
+    Node(int d, Node *n=nullptr):data(d),next(n){}
 };
 
 class LinkedStack {
-private:
-    Node *top_node;
+    Node *top_node;               // 栈顶指针，nullptr=空
 public:
-    LinkedStack() : top_node(nullptr) {}
-    void push(int x) {
+    LinkedStack():top_node(nullptr){}
+    bool empty(){ return top_node==nullptr; }
+
+    void push(int x){
+        // 新结点指旧栈顶 → 新结点变成新栈顶
         top_node = new Node(x, top_node);
     }
-    void pop() {
-        if(empty()) return;
-        Node *tmp = top_node;
-        top_node = top_node->next;
-        delete tmp;
+    void pop(){
+        if(empty())return;
+        Node *tmp=top_node;        // 记住要删的
+        top_node=top_node->next;   // 栈顶下移
+        delete tmp;                // 归还内存
     }
-    int top() {
-        return top_node->data;
-    }
-    bool empty() {
-        return top_node == nullptr;
-    }
+    int top(){ return top_node->data; }
 };
 ```
 
 ### 3.5 应用：括号匹配
 
 ```cpp
-bool isMatching(string s) {
+bool match(string s){
     stack<char> st;
-    for(char c : s) {
-        if(c == '(' || c == '[' || c == '{')
-            st.push(c);
-        else if(c == ')' || c == ']' || c == '}') {
-            if(st.empty()) return false;
-            char t = st.top(); st.pop();
-            if((c == ')' && t != '(') ||
-               (c == ']' && t != '[') ||
-               (c == '}' && t != '{'))
-                return false;
+    for(char c:s){
+        if(c=='('||c=='['||c=='{')st.push(c);  // 左括号=入栈等待
+        else{                                    // 右括号=必须配对
+            if(st.empty())return false;          // 没人配它
+            char t=st.top();st.pop();
+            if((c==')'&&t!='(')||(c==']'&&t!='[')||(c=='}'&&t!='{'))
+                return false;                    // 类型不对
         }
     }
-    return st.empty();
+    return st.empty();              // 全配对完=栈空
 }
 ```
 
-### 3.6 应用：中缀→后缀（逆波兰）
+### 3.6 应用：逆波兰计算
 
-**算法**：从左到右扫描，数字直接输出；运算符与栈顶比较优先级，栈顶优先级不低于当前则弹出；括号特殊处理。
+用栈计算 `"3 4 2 * +"`：
+- 数字直接入栈
+- 遇运算符弹出栈顶两个数（先出的是右操作数！），算完入栈
 
-```cpp
-// 简易中缀转后缀（仅含 + - * /）
-int prec(char op) {
-    if(op == '*' || op == '/') return 2;
-    if(op == '+' || op == '-') return 1;
-    return 0;
-}
-
-string infixToPostfix(string s) {
-    string res;
-    stack<char> st;
-    for(char c : s) {
-        if(isdigit(c)) res += c;    // 操作数直接输出
-        else if(c == '(') st.push(c);
-        else if(c == ')') {
-            while(st.top() != '(') {
-                res += st.top(); st.pop();
-            }
-            st.pop();  // 弹出 '('
-        }
-        else {  // 运算符
-            while(!st.empty() && prec(st.top()) >= prec(c)) {
-                res += st.top(); st.pop();
-            }
-            st.push(c);
-        }
-    }
-    while(!st.empty()) { res += st.top(); st.pop(); }
-    return res;
-}
-```
+| 读入 | 操作 | 栈 |
+|------|------|-----|
+| 3 | push | [3] |
+| 4 | push | [3,4] |
+| 2 | push | [3,4,2] |
+| * | pop 2,4 → 4×2=8 → push | [3,8] |
+| + | pop 8,3 → 3+8=11 → push | [11] |
 
 ---
 
 <details>
-<summary>📝 题目 3-1：括号匹配</summary>
+<summary>📝 题目 3-1：括号匹配判断</summary>
 
-**题目**：判断字符串 `"({[()]})"` 是否括号匹配。
+**题**：`"({[()]})"` 是否匹配？`"({[})"` 呢？
 
-**答案**：
-
-匹配。过程：
-- `(` 入栈 → `{` 入栈 → `[` 入栈 → `(` 入栈 → `)` 匹配 `(`，弹出 → `]` 匹配 `[`，弹出 → `}` 匹配 `{`，弹出 → `)` 匹配 `(`，弹出
-- 栈空，匹配成功 ✅
-
-判断 `"({[})"` → 不匹配。读到 `}` 时栈顶是 `[`，类型不匹配。
+**答**：前者匹配（最后栈空），后者不匹配——读到 `}` 时栈顶是 `[`，类型错。
 
 </details>
-
----
 
 <details>
 <summary>📝 题目 3-2：逆波兰计算</summary>
 
-**题目**：计算后缀表达式 `"3 4 + 2 * 7 /"` 的值。
+**题**：算 `"5 1 2 + 4 * + 3 -"`
 
-**答案**：
-
-1. 读 `3` → 入栈 [3]
-2. 读 `4` → 入栈 [3, 4]
-3. 读 `+` → 弹出 4, 3 → 3+4=7 → 入栈 [7]
-4. 读 `2` → 入栈 [7, 2]
-5. 读 `*` → 弹出 2, 7 → 7×2=14 → 入栈 [14]
-6. 读 `7` → 入栈 [14, 7]
-7. 读 `/` → 弹出 7, 14 → 14÷7=2 → 入栈 [2]
-
-结果为 **2**
+**答**：| `1 2 +` → 3 → [5,3] | `4 *` → 12 → [5,12] | `+` → 17 | `3 -` → **14** |
 
 </details>
 
 ---
 
-## 4. Queue —— 队列
+<a id="ch4-q"></a>
+## 4. Queue 队列
 
-### 4.1 基本性质
+### 核心概念
 
-- **FIFO**（First In First Out）—— 先进先出
-- 队尾入队（push/rear），队头出队（pop/front）
+队列 = 排队。队尾进（push），队头出（pop）。先进先出 —— **FIFO**。
 
-### 4.2 顺序队列的问题
+### 4.1 五种操作
+
+| 操作 | 做什么 |
+|------|--------|
+| `push(x)` | x 入队尾 |
+| `pop()` | 队头出列（删除） |
+| `front()` | 只看队头，不删除 |
+| `empty()` | 空否 |
+| `size()` | 几个元素 |
+
+### 4.2 普通数组队列的问题
 
 ```cpp
-int q[MAXN];
-int front = 0, rear = 0;
+int q[MAX]; int front=0, rear=0;
 // 入队：q[rear++] = x;
 // 出队：front++;
 ```
-**问题**：出队后 front 前的空间无法复用 → **假溢出**
+
+问题：出队后 front 前面那段空间没法再用了 ← **假溢出**。解决：**循环队列**。
 
 ### 4.3 循环队列
 
-利用取模运算将数组逻辑上视为环：
+用取模 `%` 让数组逻辑上首尾相接：
 
 ```cpp
-const int MAXN = 100;
-template <typename T>
-class CirQueue {
-private:
-    T data[MAXN];
-    int front, rear, cnt;   // cnt 记录元素个数
+const int MAX=100;
+template<typename T>
+class CirQueue{
+    T data[MAX];
+    int front, rear, cnt;       // cnt 记录元素数（区分空/满的方案一）
 public:
-    CirQueue() : front(0), rear(0), cnt(0) {}
+    CirQueue():front(0),rear(0),cnt(0){}
+    bool empty(){ return cnt==0; }
+    bool full(){  return cnt==MAX; }
 
-    bool empty() { return cnt == 0; }
-    bool full()  { return cnt == MAXN; }
-
-    Error_code push(T x) {
-        if(full()) return overflow;
-        data[rear] = x;
-        rear = (rear + 1) % MAXN;
+    Error_code push(T x){
+        if(full())return overflow;
+        data[rear]=x;
+        rear=(rear+1)%MAX;      // 取模实现回绕
         cnt++;
         return success;
     }
-
-    Error_code pop(T &x) {
-        if(empty()) return underflow;
-        x = data[front];
-        front = (front + 1) % MAXN;
+    Error_code pop(T &x){
+        if(empty())return underflow;
+        x=data[front];
+        front=(front+1)%MAX;
         cnt--;
         return success;
     }
-
-    T get_front() {
-        return data[front];
-    }
-
-    int size() { return cnt; }
+    T get_front(){ return data[front]; }
+    int size(){ return cnt; }
 };
 ```
 
-> **区分空与满的两种方法**：
-> 1. 记录元素个数 `cnt`（如上）
-> 2. 牺牲一个存储单元：`front == rear` 为空；`(rear+1) % MAXN == front` 为满
+**区分空/满的两种方法**：
+1. 记录 cnt（上面用的）
+2. 牺牲一格：`front==rear` 是空，`(rear+1)%MAX==front` 是满
 
 ### 4.4 链式队列
 
 ```cpp
-struct Node {
-    int data;
-    Node *next;
-    Node(int d, Node *n = nullptr) : data(d), next(n) {}
-};
+struct Node{int data; Node *next; Node(int d,Node*n=nullptr):data(d),next(n){}};
 
-class LinkedQueue {
-private:
+class LinkedQueue{
     Node *front_node, *rear_node;
 public:
-    LinkedQueue() : front_node(nullptr), rear_node(nullptr) {}
+    LinkedQueue():front_node(nullptr),rear_node(nullptr){}
+    bool empty(){ return front_node==nullptr; }
 
-    void push(int x) {
-        if(!front_node) {  // 空队列
-            front_node = rear_node = new Node(x);
-        } else {
-            rear_node->next = new Node(x);
-            rear_node = rear_node->next;
+    void push(int x){
+        if(!front_node)           // 空队列：前后指针都指向同一个新结点
+            front_node=rear_node=new Node(x);
+        else{                     // 非空：挂在队尾后面，更新队尾
+            rear_node->next=new Node(x);
+            rear_node=rear_node->next;
         }
     }
-
-    void pop() {
-        if(!front_node) return;
-        Node *tmp = front_node;
-        front_node = front_node->next;
+    void pop(){
+        if(!front_node)return;
+        Node *tmp=front_node;
+        front_node=front_node->next;  // 队头后移
         delete tmp;
-        if(!front_node) rear_node = nullptr;
+        if(!front_node)rear_node=nullptr; // 删光了，队尾也清掉
     }
-
-    int front() { return front_node->data; }
-    bool empty() { return front_node == nullptr; }
+    int front(){ return front_node->data; }
 };
 ```
 
-> **关键**：rear 和 front 同时为空或同时不为空。
-
 ---
 
 <details>
-<summary>📝 题目 4-1：循环队列判空判满</summary>
+<summary>📝 题目 4-1：循环队列判空满</summary>
 
-**题目**：若循环队列不记录 cnt，只使用 front 和 rear，如何区分空和满？
+**题**：不用 cnt，怎么区分空和满？
 
-**答案**：
+**答**：牺牲一个单元格。`front==rear` 为空，`(rear+1)%MAX==front` 为满。此时最多存 MAX-1 个。
 
-方案——**牺牲一个存储单元**：
-- 初始化：`front = rear = 0`
-- 判空：`front == rear`
-- 判满：`(rear + 1) % MAXN == front`
-- 入队：`data[rear] = x; rear = (rear + 1) % MAXN;`
-- 出队：`x = data[front]; front = (front + 1) % MAXN;`
+</details>
 
-此时队列最多存储 `MAXN - 1` 个元素。
+<details>
+<summary>📝 题目 4-2：元素个数</summary>
+
+**题**：front=3, rear=1, MAX=8。几个元素？
+
+**答**：`(1-3+8)%8 = 6` 个。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 4-2：循环队列元素个数</summary>
+<a id="ch5-l"></a>
+## 5. Linked List 链表
 
-**题目**：若 front = 3，rear = 1，MAXN = 8（不记录 cnt），队列中有几个元素？
+### 核心概念
 
-**答案**：
-
-公式：`(rear - front + MAXN) % MAXN = (1 - 3 + 8) % 8 = 6`
-
-队列中有 **6** 个元素。
-
-</details>
-
----
-
-## 5. Linked List —— 链表
+链表 = 用指针把一堆独立结点串起来。每个结点存数据 + 一个指向下一个的指针。
 
 ### 5.1 单链表结点
 
 ```cpp
-template <typename T>
-struct Node {
-    T data;
-    Node<T> *next;
-    Node(T d, Node<T> *n = nullptr) : data(d), next(n) {}
+template<typename T>
+struct Node{
+    T data;                 // 存的数据
+    Node<T> *next;          // 指向下一个结点的指针
+    Node(T d,Node<T>*n=nullptr):data(d),next(n){}
 };
 ```
 
-### 5.2 单链表基本操作
+### 5.2 单链表类（含全部操作）
 
 ```cpp
-template <typename T>
-class List {
-private:
-    Node<T> *head;
-    int _size;
+template<typename T>
+class List{
+    Node<T> *head;          // 头指针：指向第一个结点
+    int _size;              // 结点个数
 
-    void clear() {
-        while(head) {
-            Node<T> *tmp = head;
-            head = head->next;
+    // 辅助：释放所有结点
+    void clear(){
+        while(head){
+            Node<T> *tmp=head;
+            head=head->next; // 先挪头指针再删
             delete tmp;
         }
-        _size = 0;
+        _size=0;
+    }
+
+    // 辅助：深拷贝（从另一条链表复制过来）
+    void copyFrom(const List<T> &other){
+        if(!other.head){head=nullptr;_size=0;return;}
+        head=new Node<T>(other.head->data);      // 复制第一个
+        Node<T> *cur=head,*ocur=other.head->next;
+        while(ocur){
+            cur->next=new Node<T>(ocur->data);   // 逐个复制
+            cur=cur->next;
+            ocur=ocur->next;
+        }
+        _size=other._size;
     }
 
 public:
-    List() : head(nullptr), _size(0) {}
-    ~List() { clear(); }
+    List():head(nullptr),_size(0){}
+    ~List(){ clear(); }
 
-    int size() const { return _size; }
+    // 拷贝构造：List b = a; 时自动调用
+    List(const List<T> &other):head(nullptr),_size(0){ copyFrom(other); }
 
-    // 指定位置插入
-    void insert(int pos, T val) {
-        if(pos < 0 || pos > _size) return;
-        if(pos == 0) {
-            head = new Node<T>(val, head);
-        } else {
-            Node<T> *prev = head;
-            for(int i = 0; i < pos - 1; i++) prev = prev->next;
-            prev->next = new Node<T>(val, prev->next);
+    // 赋值：b = a; 时自动调用
+    List<T>& operator=(const List<T> &other){
+        if(this!=&other){          // 防自赋值
+            clear();               // 先扔掉自己的
+            copyFrom(other);       // 复制别人的
+        }
+        return *this;
+    }
+
+    int size()const{ return _size; }
+
+    // ----- 插入 -----
+    void insert(int pos,T val){
+        if(pos<0||pos>_size)return;   // 范围检查
+        if(pos==0)                     // 插头部：直接换头
+            head=new Node<T>(val,head);
+        else{                          // 插中间：找前驱
+            Node<T> *prev=head;
+            for(int i=0;i<pos-1;i++)prev=prev->next;
+            prev->next=new Node<T>(val,prev->next);
         }
         _size++;
     }
 
-    // 指定位置删除
-    void remove(int pos, T &val) {
-        if(pos < 0 || pos >= _size) return;
+    // ----- 删除 -----
+    void remove(int pos,T &val){
+        if(pos<0||pos>=_size)return;
         Node<T> *target;
-        if(pos == 0) {
-            target = head;
-            head = head->next;
-        } else {
-            Node<T> *prev = head;
-            for(int i = 0; i < pos - 1; i++) prev = prev->next;
-            target = prev->next;
-            prev->next = target->next;
+        if(pos==0){                    // 删头
+            target=head;
+            head=head->next;
+        }else{                         // 删中间：找前驱
+            Node<T> *prev=head;
+            for(int i=0;i<pos-1;i++)prev=prev->next;
+            target=prev->next;
+            prev->next=target->next;
         }
-        val = target->data;
+        val=target->data;              // 通过引用传出值
         delete target;
         _size--;
     }
 
-    // 遍历
-    void traverse(void (*visit)(T &)) {
-        Node<T> *curr = head;
-        while(curr) {
-            visit(curr->data);
-            curr = curr->next;
-        }
+    // ----- 遍历 -----
+    // visit 是函数指针：每路过一个结点就调一次
+    void traverse(void (*visit)(T&)){
+        Node<T> *cur=head;
+        while(cur){ visit(cur->data); cur=cur->next; }
     }
 };
 ```
@@ -600,283 +522,192 @@ public:
 ### 5.3 链表反转
 
 ```cpp
-// 迭代版
-void reverse() {
-    Node<T> *prev = nullptr, *curr = head;
-    while(curr) {
-        Node<T> *next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
+void reverse(){
+    Node<T> *prev=nullptr,*cur=head;
+    while(cur){
+        Node<T> *next=cur->next;   // 先记住下一站
+        cur->next=prev;            // 把箭头反过来
+        prev=cur;                  // 前驱前进
+        cur=next;                  // 当前前进
     }
-    head = prev;
+    head=prev;                     // 最后 prev 就是新头
 }
 ```
+
+图解：`1→2→3→nullptr` 变成 `3→2→1→nullptr`
 
 ### 5.4 双链表
 
+多一个 `prev` 指针指向前驱，方便前后双向移动。
+
 ```cpp
-template <typename T>
-struct DNode {
+template<typename T>
+struct DNode{
     T data;
-    DNode<T> *prev;
-    DNode<T> *next;
-    DNode(T d, DNode<T> *p = nullptr, DNode<T> *n = nullptr)
-        : data(d), prev(p), next(n) {}
+    DNode<T> *prev,*next;
+    DNode(T d,DNode<T>*p=nullptr,DNode<T>*n=nullptr):data(d),prev(p),next(n){}
 };
 
-// 在 p 之后插入
-void insertAfter(DNode<T> *p, T val) {
-    DNode<T> *newNode = new DNode<T>(val, p, p->next);
-    if(p->next) p->next->prev = newNode;
-    p->next = newNode;
-}
-
-// 删除 p 之后的结点
-void removeAfter(DNode<T> *p) {
-    if(!p->next) return;
-    DNode<T> *target = p->next;
-    p->next = target->next;
-    if(target->next) target->next->prev = p;
-    delete target;
+// 在 p 之后插入 val
+void insertAfter(DNode<T> *p,T val){
+    DNode<T> *n=new DNode<T>(val,p,p->next);
+    if(p->next)p->next->prev=n;    // 原后继的 prev 要更新
+    p->next=n;
 }
 ```
 
-### 5.5 应用：约瑟夫问题（循环链表）
+### 5.5 应用：约瑟夫环
+
+n 人围圈，报数到 m 出局，求最后一人。用 STL list 模拟：
 
 ```cpp
-// n 个人围一圈，从第一个人开始报数，数到 m 的人出列
-void Josephus(int n, int m) {
-    list<int> people;
-    for(int i = 1; i <= n; i++) people.push_back(i);
+void Josephus(int n,int m){
+    list<int> ppl;
+    for(int i=1;i<=n;i++)ppl.push_back(i);
 
-    auto it = people.begin();
-    while(people.size() > 1) {
-        for(int i = 1; i < m; i++) {
-            it++;
-            if(it == people.end()) it = people.begin();
+    auto it=ppl.begin();
+    while(ppl.size()>1){
+        for(int i=1;i<m;i++){      // 报数移动
+            ++it;
+            if(it==ppl.end())it=ppl.begin();  // 环形
         }
-        it = people.erase(it);
-        if(it == people.end()) it = people.begin();
+        it=ppl.erase(it);          // 出局
+        if(it==ppl.end())it=ppl.begin();
     }
-    cout << "幸存者: " << people.front() << endl;
+    cout<<"幸存者:"<<ppl.front();
 }
 ```
 
 ---
 
 <details>
-<summary>📝 题目 5-1：链表反转</summary>
+<summary>📝 题目 5-1：反转推演</summary>
 
-**题目**：对于链表 1 → 2 → 3 → 4 → nullptr，写出迭代反转每步后的结果。
+**题**：`1→2→3→4→nullptr` 迭代反转每步结果。
 
-**答案**：
-
-初始: `head → 1 → 2 → 3 → 4 → nullptr`
-- prev = nullptr, curr = 1
-
-第1步: `1 → nullptr`  ← 断开原链
-- prev = 1, curr = 2
-
-第2步: `2 → 1 → nullptr`
-- prev = 2, curr = 3
-
-第3步: `3 → 2 → 1 → nullptr`
-- prev = 3, curr = 4
-
-第4步: `4 → 3 → 2 → 1 → nullptr`
-- prev = 4, curr = nullptr
-
-最终 head = 4：`4 → 3 → 2 → 1 → nullptr`
+**答**：初始 prev=null,cur=1。第1步：1→null, prev=1,cur=2；第2步：2→1→null, prev=2,cur=3；第3步：3→2→1→null, prev=3,cur=4；第4步：4→3→2→1→null。head=4。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 5-2：双链表插入</summary>
+<a id="ch6-r"></a>
+## 6. Recursion 递归与回溯
 
-**题目**：已知双链表中有结点 a 和 c（a ↔ c），在 a 之后插入 b，请写出代码。
+### 核心概念
 
-**答案**：
+递归 = 函数自己调用自己。三要素：**基本情况**（最小规模直接返回）、**递归调用**（向基本情况逼近）、**问题分解**（规模减小）。
 
-```cpp
-// a ↔ c 中插入 b 得到 a ↔ b ↔ c
-DNode<int> *b = new DNode<int>(val, a, a->next);
-// 或者：
-// b->prev = a;
-// b->next = a->next;
-if(a->next) a->next->prev = b;  // 如果 a 后面有结点，让它的 prev 指向 b
-a->next = b;                     // a 的 next 指向 b
-```
-
-</details>
-
----
-
-## 6. Recursion —— 递归与回溯
-
-### 6.1 递归三要素
-
-1. **基本情况**（Base Case）—— 最小规模直接返回
-2. **递归调用** —— 向基本情况逼近
-3. **问题分解** —— 每次调用让规模减小
-
-### 6.2 经典递归：阶乘
+### 6.1 经典递归
 
 ```cpp
-int factorial(int n) {
-    if(n <= 1) return 1;             // base case
-    return n * factorial(n - 1);     // 递归
+int factorial(int n){
+    if(n<=1)return 1;                  // 基本情况
+    return n*factorial(n-1);           // 递归
+}
+
+int fib(int n){
+    if(n<=1)return n;                  // 基本情况
+    return fib(n-1)+fib(n-2);          // 递归（但 O(2ⁿ)，要优化）
 }
 ```
 
-### 6.3 回溯：八皇后问题
+**递归 vs 迭代**：递归的 fib 有大量重复计算（如 fib(5) 多次算 fib(3)），可用递推 O(n) 优化或用数组存已算结果（记忆化）。
 
-回溯 = 递归 + 试错 + 撤销
+### 6.2 回溯框架 —— 八皇后问题
+
+回溯 = 递归 + 试错 + 撤销。关键四步：尝试 → 检查 → 递归 → 撤销。
 
 ```cpp
-const int MAX = 30;
-class Queens {
-private:
-    int count;                // 已放置的皇后数 / 当前行
-    bool queen[MAX][MAX];     // 棋盘
+const int MAX=30;
+class Queens{
+    int cnt;                     // 已放皇后数 = 当前行号
+    bool q[MAX][MAX];            // 棋盘：true=有皇后
 public:
-    int board_size;
+    int sz;
+    Queens(int s):sz(s),cnt(0){ memset(q,0,sizeof(q)); }
+    bool solved(){ return cnt==sz; }
 
-    Queens(int sz) : board_size(sz), count(0) {
-        memset(queen, 0, sizeof(queen));
-    }
-
-    bool is_solved() { return count == board_size; }
-
-    bool unguarded(int col) {
-        for(int r = 0; r < count; r++) {
-            for(int c = 0; c < board_size; c++) {
-                if(!queen[r][c]) continue;
-                if(c == col) return false;                       // 同列
-                if(abs(c - col) == abs(r - count)) return false;  // 对角线
-            }
-        }
+    // 检查 (cnt, col) 安全否
+    bool safe(int col){
+        for(int r=0;r<cnt;r++)         // 扫所有已放的行
+            for(int c=0;c<sz;c++)
+                if(q[r][c]){
+                    if(c==col)return false;             // 同列冲突
+                    if(abs(c-col)==abs(r-cnt))return false; // 对角线冲突
+                }
         return true;
     }
 
-    void insert(int col) {
-        queen[count][col] = true;
-        count++;
-    }
-
-    void remove(int col) {
-        count--;
-        queen[count][col] = false;
-    }
+    void put(int col){ q[cnt][col]=1; cnt++; }   // 放置
+    void undo(int col){ cnt--; q[cnt][col]=0; }  // 撤销
 };
 
 // DFS 回溯
-void enumerate(Queens &q, long long &ans) {
-    if(q.is_solved()) { ans++; return; }
-    for(int c = 0; c < q.board_size; c++) {
-        if(q.unguarded(c)) {
-            q.insert(c);      // 尝试放置
-            enumerate(q, ans); // 递归
-            q.remove(c);       // 撤销
+void enumerate(Queens &q,long long &ans){
+    if(q.solved()){ ans++; return; }         // 找到一解
+    for(int c=0;c<q.sz;c++){
+        if(q.safe(c)){
+            q.put(c);                        // 尝试
+            enumerate(q,ans);                // 递归
+            q.undo(c);                       // 撤销 ← 回溯关键
         }
     }
 }
 ```
 
-### 6.4 分治思想
-
-把大问题分解为独立子问题，分别解决后合并。
-
 ---
 
 <details>
-<summary>📝 题目 6-1：八皇后计数</summary>
+<summary>📝 题目 6-1：递归 vs 递推</summary>
 
-**题目**：8×8 棋盘上放 8 个皇后，使它们互不攻击，共有多少种解法？用回溯法搜索过程中，每个皇后在放置时最多检查几次冲突？
+**题**：fib(10) 递归和递推各多少计算量？
 
-**答案**：
-
-- 8 皇后共有 **92** 种解（经典结论）
-- 每个皇后在第 count 行放置时，需检查该行所有列（0 到 board_size-1），即最多 8 次；每次 unguarded 检查需要遍历之前的每一行（最多 7 行），每行检查一列和两条对角线，共 O(n) 次。
-- 总复杂度约为 O(n!)，n=8 时搜 92 个解约 15,720 次递归调用。
+**答**：递归 O(2¹⁰)≈1024 次调用；递推 O(10)=10 步。递推远优。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 6-2：递归递推</summary>
+<a id="ch7-po"></a>
+## 7. Polynomial 多项式
 
-**题目**：写出斐波那契数列的递归和递推实现，并说明各自的复杂度。
+### 核心概念
 
-**答案**：
-
-```cpp
-// 递归（指数级 O(2^n)）
-int fib_rec(int n) {
-    if(n <= 1) return n;
-    return fib_rec(n-1) + fib_rec(n-2);
-}
-
-// 递推（线性 O(n)）
-int fib_iter(int n) {
-    if(n <= 1) return n;
-    int a = 0, b = 1, c;
-    for(int i = 2; i <= n; i++) {
-        c = a + b;
-        a = b;
-        b = c;
-    }
-    return b;
-}
-```
-
-递归版因为大量重复计算（如 fib(5) 多次计算 fib(3)），复杂度 O(2^n)；递推版每个值只算一次，O(n)。
-
-</details>
-
----
-
-## 7. Polynomial —— 多项式
-
-### 7.1 多项式链表表示
-
-利用链表存储非零项（系数 + 指数），节省空间：
+用链表存多项式：每个结点存一个非零项的系数 + 指数。避免存零项浪费空间。
 
 ```cpp
-struct Term {
-    int coef;    // 系数
-    int exp;     // 指数
+struct Term{
+    int coef;              // 系数
+    int exp;               // 指数
     Term *next;
-    Term(int c, int e, Term *n = nullptr) : coef(c), exp(e), next(n) {}
+    Term(int c,int e,Term*n=nullptr):coef(c),exp(e),next(n){}
 };
 ```
 
-### 7.2 多项式加法
+### 多项式加法
+
+两链表各自按指数降序排列，双指针归并：
 
 ```cpp
-Term* addPoly(Term *a, Term *b) {
-    Term dummy(0, 0), *tail = &dummy;
-    while(a && b) {
-        if(a->exp > b->exp) {
-            tail->next = new Term(a->coef, a->exp);
-            a = a->next;
-        } else if(a->exp < b->exp) {
-            tail->next = new Term(b->coef, b->exp);
-            b = b->next;
-        } else {
-            int sum = a->coef + b->coef;
-            if(sum != 0)
-                tail->next = new Term(sum, a->exp);
-            a = a->next;
-            b = b->next;
+Term* addPoly(Term *a,Term *b){
+    Term dummy(0,0),*tail=&dummy;    // 哑结点简化头部处理
+    while(a&&b){
+        if(a->exp > b->exp){         // a 的指数大：直接挂 a
+            tail->next=new Term(a->coef,a->exp);
+            a=a->next;
+        }else if(a->exp < b->exp){   // b 的指数大：挂 b
+            tail->next=new Term(b->coef,b->exp);
+            b=b->next;
+        }else{                       // 指数相同：系数相加
+            int sum=a->coef+b->coef;
+            if(sum!=0) tail->next=new Term(sum,a->exp); // 抵消为 0 则跳过
+            a=a->next; b=b->next;
         }
-        if(tail->next) tail = tail->next;
+        if(tail->next)tail=tail->next;
     }
-    while(a) { tail->next = new Term(a->coef, a->exp); tail = tail->next; a = a->next; }
-    while(b) { tail->next = new Term(b->coef, b->exp); tail = tail->next; b = b->next; }
+    while(a){tail->next=new Term(a->coef,a->exp);tail=tail->next;a=a->next;}
+    while(b){tail->next=new Term(b->coef,b->exp);tail=tail->next;b=b->next;}
     return dummy.next;
 }
 ```
@@ -884,360 +715,286 @@ Term* addPoly(Term *a, Term *b) {
 ---
 
 <details>
-<summary>📝 题目 7-1：多项式加法</summary>
+<summary>📝 题目 7-1：加法推演</summary>
 
-**题目**：用链表计算 `3x^5 + 2x^3 + x` 加 `4x^4 - x^3 + 2x` 的结果。
+**题**：`3x⁵ + 2x³ + x` 加 `4x⁴ - x³ + 2x`
 
-**答案**：
-
-```
-(3x^5 + 2x^3 + x) + (4x^4 - x^3 + 2x)
-
-逐项合并：
-x^5:    3        → 3x^5
-x^4:    4        → 4x^4
-x^3:    2 + (-1) = 1  → x^3
-x^1:    1 + 2   = 3  → 3x
-
-结果：3x^5 + 4x^4 + x^3 + 3x
-```
+**答**：x⁵→3、x⁴→4、x³→2+(-1)=1、x→1+2=3。结果：**3x⁵ + 4x⁴ + x³ + 3x**。
 
 </details>
 
 ---
 
-## 8. Template —— 模板
+<a id="ch8-t"></a>
+## 8. Template 模板
 
-### 8.1 函数模板
-
-```cpp
-template <typename T>
-T max(T a, T b) {
-    return a > b ? a : b;
-}
-
-// 使用
-cout << max(3, 5);        // T = int
-cout << max(3.14, 2.71);  // T = double
-```
-
-### 8.2 类模板
+### 写一次，适配所有类型
 
 ```cpp
-template <typename T>
-class Stack {
-private:
+// 函数模板
+template<typename T>
+T myMax(T a,T b){ return a>b?a:b; }
+
+cout<<myMax(3,5);        // T 推导为 int
+cout<<myMax(3.14,2.71);  // T 推导为 double
+
+// 类模板
+template<typename T>
+class Stack{
     vector<T> data;
 public:
-    void push(T x) { data.push_back(x); }
-    void pop() { data.pop_back(); }
-    T top() { return data.back(); }
-    bool empty() { return data.empty(); }
+    void push(T x){data.push_back(x);}
+    void pop(){data.pop_back();}
+    T top(){return data.back();}
 };
+
+Stack<int> si;            // 装 int 的栈
+Stack<string> ss;         // 装 string 的栈
 ```
 
-### 8.3 模板+函数指针遍历
+### 函数指针遍历模式
 
 ```cpp
-template <typename T>
-void traverse(Node<T> *head, void (*visit)(T &)) {
-    Node<T> *curr = head;
-    while(curr) {
-        visit(curr->data);
-        curr = curr->next;
-    }
+template<typename T>
+void traverse(Node<T>*head,void(*visit)(T&)){
+    Node<T>*cur=head;
+    while(cur){visit(cur->data);cur=cur->next;}
 }
 
-// 使用
-void print(int &x) { cout << x << endl; }
-void update(int &x) { x *= 2; }
-traverse(head, print);
-traverse(head, update);
+void print(int&x){cout<<x<<endl;}
+void upd(int&x){x*=2;}
+
+List<int> l;
+l.traverse(print);     // 打印每个元素
+l.traverse(upd);       // 每个元素翻倍
 ```
 
 ---
 
-<details>
-<summary>📝 题目 8-1：模板使用</summary>
+<a id="ch9-so"></a>
+## 9. Sorting 排序
 
-**题目**：写出一个泛型函数 `swap`，交换两个同类型变量的值。
-
-**答案**：
+### 9.1 选择排序 —— 每次找最小的放到前面
 
 ```cpp
-template <typename T>
-void my_swap(T &a, T &b) {
-    T t = a;
-    a = b;
-    b = t;
-}
-
-// 使用
-int x = 1, y = 2;
-my_swap(x, y);     // x=2, y=1
-
-double p = 3.14, q = 2.71;
-my_swap(p, q);     // p=2.71, q=3.14
-```
-
-</details>
-
----
-
-## 9. Sorting —— 排序
-
-> Wk12 要求实现 6 种排序，对比运行结果。
-
-### 9.1 选择排序 (Selection Sort)
-
-```cpp
-void selection_sort(int arr[], int n) {
-    for(int i = 0; i < n-1; i++) {
-        int mn = i;
-        for(int j = i+1; j < n; j++)
-            if(arr[j] < arr[mn]) mn = j;
-        if(mn != i) swap(arr[i], arr[mn]);
+void selection_sort(int a[],int n){
+    for(int i=0;i<n-1;i++){             // i=当前要填的位置
+        int mn=i;                        // 假设 i 处就是最小
+        for(int j=i+1;j<n;j++)           // 在 i 后面找更小的
+            if(a[j]<a[mn])mn=j;
+        if(mn!=i)swap(a[i],a[mn]);       // 把最小的换到 i 处
     }
 }
-// 复杂度: O(n²) 稳定×
+// O(n²)，不稳定
 ```
 
-### 9.2 插入排序 (Insertion Sort)
+### 9.2 插入排序 —— 像整理扑克牌
 
 ```cpp
-void insertion_sort(int arr[], int n) {
-    for(int i = 1; i < n; i++) {
-        int key = arr[i];
-        int j = i-1;
-        while(j >= 0 && arr[j] > key) {
-            arr[j+1] = arr[j];
+void insertion_sort(int a[],int n){
+    for(int i=1;i<n;i++){                // 从第二张开始
+        int key=a[i];                    // 抽出这张牌
+        int j=i-1;
+        while(j>=0&&a[j]>key){          // 把比它大的往后挪
+            a[j+1]=a[j];
             j--;
         }
-        arr[j+1] = key;
+        a[j+1]=key;                      // 插入到正确位置
     }
 }
-// 复杂度: 最好 O(n), 最坏 O(n²) 稳定√
+// 最好 O(n)（已排好），最坏 O(n²)，稳定
 ```
 
-### 9.3 希尔排序 (Shell Sort)
+### 9.3 希尔排序 —— 插入排序的升级版
 
 ```cpp
-void shell_sort(int arr[], int n) {
-    for(int gap = n/2; gap > 0; gap /= 2) {
-        for(int i = gap; i < n; i++) {
-            int temp = arr[i];
-            int j;
-            for(j = i; j >= gap && arr[j-gap] > temp; j -= gap)
-                arr[j] = arr[j-gap];
-            arr[j] = temp;
+void shell_sort(int a[],int n){
+    for(int gap=n/2;gap>0;gap/=2){       // gap 逐步缩小
+        for(int i=gap;i<n;i++){           // 对每个子序列做插排
+            int t=a[i],j;
+            for(j=i;j>=gap&&a[j-gap]>t;j-=gap)
+                a[j]=a[j-gap];
+            a[j]=t;
         }
     }
 }
-// 复杂度: O(n log n) ~ O(n²) 取决于增量序列
 ```
 
-### 9.4 快速排序 (Quick Sort)
+### 9.4 快速排序 —— 基准左右分治
 
 ```cpp
-void quick_sort(int arr[], int l, int r) {
-    if(l >= r) return;
-    int p = arr[l + (r-l)/2];  // 中间值作 pivot
-    int i = l, j = r;
-    while(i <= j) {
-        while(arr[i] < p) i++;
-        while(arr[j] > p) j--;
-        if(i <= j) {
-            swap(arr[i], arr[j]);
-            i++; j--;
-        }
+void quick_sort(int a[],int l,int r){
+    if(l>=r)return;
+    int p=a[l+(r-l)/2];                  // 取中间当 pivot
+    int i=l,j=r;
+    while(i<=j){
+        while(a[i]<p)i++;                // 找左边比 pivot 大的
+        while(a[j]>p)j--;                // 找右边比 pivot 小的
+        if(i<=j){swap(a[i],a[j]);i++;j--;} // 交换
     }
-    if(l < j) quick_sort(arr, l, j);
-    if(i < r) quick_sort(arr, i, r);
+    if(l<j)quick_sort(a,l,j);            // 递归左边
+    if(i<r)quick_sort(a,i,r);            // 递归右边
 }
-// 复杂度: 平均 O(n log n), 最坏 O(n²)
+// 平均 O(nlogn)，最坏 O(n²)，不稳定
 ```
 
-### 9.5 归并排序 (Merge Sort)
+### 9.5 归并排序 —— 先分后合
 
 ```cpp
-void merge(int arr[], int l, int m, int r) {
-    int n1 = m-l+1, n2 = r-m;
-    int L[n1], R[n2];
-    for(int i = 0; i < n1; i++) L[i] = arr[l+i];
-    for(int i = 0; i < n2; i++) R[i] = arr[m+1+i];
-    int i = 0, j = 0, k = l;
-    while(i < n1 && j < n2) {
-        if(L[i] <= R[j]) arr[k++] = L[i++];
-        else arr[k++] = R[j++];
-    }
-    while(i < n1) arr[k++] = L[i++];
-    while(j < n2) arr[k++] = R[j++];
+void merge(int a[],int l,int m,int r){
+    int n1=m-l+1,n2=r-m;
+    int L[n1],R[n2];                     // 临时数组存左右
+    for(int i=0;i<n1;i++)L[i]=a[l+i];
+    for(int i=0;i<n2;i++)R[i]=a[m+1+i];
+    int i=0,j=0,k=l;
+    while(i<n1&&j<n2)                    // 合并：谁小取谁
+        a[k++]=(L[i]<=R[j])?L[i++]:R[j++];
+    while(i<n1)a[k++]=L[i++];            // 剩下的直接抄
+    while(j<n2)a[k++]=R[j++];
 }
 
-void merge_sort(int arr[], int l, int r) {
-    if(l >= r) return;
-    int m = l + (r-l)/2;
-    merge_sort(arr, l, m);
-    merge_sort(arr, m+1, r);
-    merge(arr, l, m, r);
+void merge_sort(int a[],int l,int r){
+    if(l>=r)return;
+    int m=l+(r-l)/2;
+    merge_sort(a,l,m);                   // 左边排序
+    merge_sort(a,m+1,r);                 // 右边排序
+    merge(a,l,m,r);                      // 合并有序两边
 }
-// 复杂度: O(n log n) 稳定√ 空间 O(n)
+// O(nlogn)，稳定，但额外空间 O(n)
 ```
 
-### 9.6 堆排序 (Heap Sort)
+### 9.6 堆排序 —— 用最大堆取最大值
 
 ```cpp
-void heapify(int arr[], int n, int i) {
-    int mx = i;
-    int l = 2*i+1, r = 2*i+2;
-    if(l < n && arr[l] > arr[mx]) mx = l;
-    if(r < n && arr[r] > arr[mx]) mx = r;
-    if(mx != i) {
-        swap(arr[i], arr[mx]);
-        heapify(arr, n, mx);
-    }
+void heapify(int a[],int n,int i){
+    int mx=i;                            // 假设自己是最大
+    int l=2*i+1,r=2*i+2;
+    if(l<n&&a[l]>a[mx])mx=l;             // 左孩子更大
+    if(r<n&&a[r]>a[mx])mx=r;             // 右孩子更大
+    if(mx!=i){swap(a[i],a[mx]);heapify(a,n,mx);} // 下沉
 }
 
-void heap_sort(int arr[], int n) {
-    // 建最大堆
-    for(int i = n/2-1; i >= 0; i--) heapify(arr, n, i);
-    // 逐个取最大值放到末尾
-    for(int i = n-1; i > 0; i--) {
-        swap(arr[0], arr[i]);
-        heapify(arr, i, 0);
+void heap_sort(int a[],int n){
+    for(int i=n/2-1;i>=0;i--)heapify(a,n,i);  // 建堆
+    for(int i=n-1;i>0;i--){                   // 取最大值
+        swap(a[0],a[i]);                       // 最大→末尾
+        heapify(a,i,0);                        // 剩余再堆化
     }
 }
-// 复杂度: O(n log n)
+// O(nlogn)，不稳定，原地
 ```
 
-### 9.7 排序总结
+### 9.7 六种排序总结
 
-| 算法 | 平均时间 | 最坏时间 | 稳定 | 原地 |
-|------|---------|---------|------|------|
-| 选择排序 | O(n²) | O(n²) | × | √ |
-| 插入排序 | O(n²) | O(n²) | √ | √ |
-| 希尔排序 | O(n¹·³) | O(n²) | × | √ |
-| 快速排序 | O(n log n) | O(n²) | × | √ |
-| 归并排序 | O(n log n) | O(n log n) | √ | × |
-| 堆排序 | O(n log n) | O(n log n) | × | √ |
+| 算法 | 平均 | 最坏 | 稳定 | 原地 |
+|------|------|------|------|------|
+| 选择 | O(n²) | O(n²) | × | √ |
+| 插入 | O(n²) | O(n²) | √ | √ |
+| 希尔 | ~O(n¹·³³) | O(n²) | × | √ |
+| 快速 | O(nlogn) | O(n²) | × | √ |
+| 归并 | O(nlogn) | O(nlogn) | √ | × |
+| 堆 | O(nlogn) | O(nlogn) | × | √ |
 
 ---
 
 <details>
-<summary>📝 题目 9-1：排序过程</summary>
+<summary>📝 题目 9-1：快排一趟</summary>
 
-**题目**：对数组 `[5, 3, 8, 6, 2, 7]` 写出快速排序第一趟划分后的结果（pivot 选中间值）。
+**题**：`[5,3,8,6,2,7]` 快排第一趟（pivot=6）。
 
-**答案**：
+**答**：i 找≥6→arr[2]=8，j 找≤6→arr[4]=2，交换→[5,3,2,6,8,7]。左边≤6，右边≥6。
 
-pivot = 6（第 3 个元素，下标 2）：
-- i=0, j=5: arr[0]=5 < 6 → i=1; arr[5]=7 > 6 → j=4
-- i=1, j=4: arr[1]=3 < 6 → i=2; arr[4]=2 < 6 → j=3
-- i=2, j=3: arr[2]=8 > 6, arr[3]=6 <=6 (不满足 arr[j]>6) → j=2 → 循环结束
+</details>
 
-交换 arr[2] 和 arr[4] → `[5, 3, 2, 6, 8, 7]`
-第一趟后：左边 [5, 3, 2] 均 ≤ 6，右边 [8, 7] 均 ≥ 6
+<details>
+<summary>📝 题目 9-2：堆排序过程</summary>
+
+**题**：[10,9,8,7,6,5,4,3,2,1] 已是大根堆，两次交换后数组状况。
+
+**答**：第一次 swap(10,1)→[1,9,8,7,6,5,4,3,2,|10]，heapify 得 [9,7,8,3,6,5,4,1,2,|10]。第二次 swap(9,2)→[2,7,8,3,6,5,4,1,|9,10]，heapify 得 [8,7,5,3,6,2,4,1,9,10]。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 9-2：堆排序建堆</summary>
+<a id="ch10-h"></a>
+## 10. Hash Table 哈希表
 
-**题目**：数组 [10, 9, 8, 7, 6, 5, 4, 3, 2, 1] 已是最大堆，不用建堆。写出堆排序前两次交换后的数组。
+### 核心思想
 
-**答案**：
+把 key 通过哈希函数映射到数组下标。**除留余数法**：`h(key)=key%table_size`。
 
-初始已建好最大堆 [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+核心三操作：**insert**（插入）、**retrieve**（查找）、**remove**（删除）。两个关键字映射到同一位置叫**冲突**，需要解决。
 
-第一次交换：swap(10, 1) → [1, 9, 8, 7, 6, 5, 4, 3, 2, 10]
-- 堆大小减为 9，对根 heapify：
-  - 9 > 1 → swap(1, 9) → [9, 1, 8, 7, 6, 5, 4, 3, 2, 10]
-  - 1 < 7, 1 < 6 → swap(1, 7) → [9, 7, 8, 1, 6, 5, 4, 3, 2, 10]
-  - 1 < 3 → swap(1, 3) → [9, 7, 8, 3, 6, 5, 4, 1, 2, 10]
-
-第二次交换：swap(9, 2) → [2, 7, 8, 3, 6, 5, 4, 1, 9, 10]
-- 堆大小减为 8，对根 heapify：
-  - 8 > 2, 7 > 2 → swap(2, 8) → [8, 7, 2, 3, 6, 5, 4, 1, 9, 10]
-  - 2 < 5, 2 < 4 → swap(2, 5) → [8, 7, 5, 3, 6, 2, 4, 1, 9, 10]
-
-结果：[8, 7, 5, 3, 6, 2, 4, 1, 9, 10]
-
-</details>
-
----
-
-## 10. Hash Table —— 哈希表
-
-### 10.1 基本概念
-
-- **哈希函数**：将关键字映射到数组下标
-  - 除留余数法：`hash(key) = key % table_size`
-- **冲突**：不同关键字映射到同一位置
-- **装填因子**：α = 已有元素数 / 表大小
-
-### 10.2 开放定址法 —— 二次探测
+### 10.1 二次探测实现
 
 ```cpp
-const int hash_size = 7;
+const int H=7;
 
-int hash(Key k) { return k % hash_size; }
+int hash(Key k){ return k%H; }   // 哈希函数
 
-// 二次探测: pos = (h + i²) % hash_size
-class Hash_table {
-private:
-    Record table[hash_size];
-    bool empty[hash_size];
-    bool deleted[hash_size];
-
+class HashTable{
+    Record tbl[H];
+    bool emp[H];               // 这个位置是空的吗
+    bool del[H];               // 这个位置被删过吗（墓碑标记）
+                               // ⚠️ 为什么需要 del？因为删除后如果直接置空，
+                               // 后续查找会以为"没找到"而提前终止
 public:
-    void clear() {
-        for(int i = 0; i < hash_size; i++) {
-            empty[i] = true;
-            deleted[i] = false;
-        }
+    void clear(){
+        for(int i=0;i<H;i++){ emp[i]=true; del[i]=false; }
     }
 
-    Error_code insert(const Record &new_entry, int &pos) {
-        Key target = new_entry.the_key();
-        int h = hash(target);
-        int first_deleted = -1;
+    // 插入——二次探测 pos=(h + i²) % H
+    Error_code insert(const Record &r,int &pos){
+        Key k=r.the_key();
+        int h=hash(k);
+        int fd=-1;                // 第一个遇到的墓碑位置
 
-        for(int i = 0; i < hash_size; i++) {
-            pos = (h + i*i) % hash_size;
-
-            if(empty[pos]) {  // 空位，插入
-                if(first_deleted != -1) pos = first_deleted;
-                table[pos] = new_entry;
-                empty[pos] = false;
+        for(int i=0;i<H;i++){
+            pos=(h+i*i)%H;         // 二次探测公式
+            if(emp[pos]){          // 找到空位
+                if(fd!=-1)pos=fd;  // 优先填墓碑
+                tbl[pos]=r;
+                emp[pos]=false;
                 return success;
             }
-            if(deleted[pos]) {  // 标记删除位
-                if(first_deleted == -1) first_deleted = pos;
+            if(del[pos]){          // 墓碑：记下来但不停止
+                if(fd==-1)fd=pos;
                 continue;
             }
-            if(table[pos].the_key() == target)
-                return duplicate_error;  // 重复
+            if(tbl[pos].the_key()==k)return duplicate_error; // 重复
         }
-        // 有空位但之前标记删除的位置
-        if(first_deleted != -1) {
-            pos = first_deleted;
-            table[pos] = new_entry;
-            empty[pos] = false;
-            deleted[pos] = false;
+        if(fd!=-1){                // 遍历完只有墓碑可用
+            pos=fd;tbl[pos]=r;
+            emp[pos]=false;del[pos]=false;
             return success;
         }
-        return overflow;  // 表满
+        return overflow;           // 表真满了
     }
 
-    Error_code retrieve(const Key &target, Record &found, int &pos) {
-        int h = hash(target);
-        for(int i = 0; i < hash_size; i++) {
-            pos = (h + i*i) % hash_size;
-            if(empty[pos]) return not_present;
-            if(!deleted[pos] && table[pos].the_key() == target) {
-                found = table[pos];
+    // 查找——也用二次探测
+    Error_code retrieve(const Key &k,Record &found,int &pos){
+        int h=hash(k);
+        for(int i=0;i<H;i++){
+            pos=(h+i*i)%H;
+            if(emp[pos])return not_present;          // 遇到空位=一定没有
+            if(!del[pos]&&tbl[pos].the_key()==k){     // 找到
+                found=tbl[pos];
+                return success;
+            }
+        }
+        return not_present;
+    }
+
+    // 删除——软删除（标记墓碑）
+    Error_code remove(const Key &k,Record &found,int &pos){
+        int h=hash(k);
+        for(int i=0;i<H;i++){
+            pos=(h+i*i)%H;
+            if(emp[pos])return not_present;
+            if(!del[pos]&&tbl[pos].the_key()==k){
+                found=tbl[pos];
+                del[pos]=true;     // 标记删除，不置空！
                 return success;
             }
         }
@@ -1246,27 +1003,20 @@ public:
 };
 ```
 
-### 10.3 线性探测 vs 二次探测
+### 10.2 几种探测方式对比
 
-| 方法 | 探测序列 | 优点 | 缺点 |
-|------|---------|------|------|
-| 线性探测 | (h+1), (h+2), ... | 实现简单 | 容易产生聚集 |
-| 二次探测 | (h+1²), (h+2²), ... | 减少聚集 | 不一定能遍历所有空位 |
+| 方式 | 序列 | 特点 |
+|------|------|------|
+| 线性探测 | (h+1),(h+2),... | 简单但易聚集 |
+| 二次探测 | (h+1²),(h+2²),... | 减少聚集 |
 
-### 10.4 链地址法（Separate Chaining）
+### 10.3 链地址法（每个槽一个链表）
 
 ```cpp
-vector<int> table[hash_size];
-
-void insert(int key) {
-    int h = key % hash_size;
-    table[h].push_back(key);
-}
-
-bool search(int key) {
-    int h = key % hash_size;
-    for(int x : table[h])
-        if(x == key) return true;
+vector<int> tbl[H];
+void insert(int k){ tbl[k%H].push_back(k); }
+bool search(int k){
+    for(int x:tbl[k%H])if(x==k)return true;
     return false;
 }
 ```
@@ -1274,326 +1024,235 @@ bool search(int key) {
 ---
 
 <details>
-<summary>📝 题目 10-1：二次探测插入</summary>
+<summary>📝 题目 10-1：二次探测插入推演</summary>
 
-**题目**：哈希表大小 7，哈希函数 h(k) = k % 7，使用二次探测。插入关键字 10, 22, 31, 4, 15，写出每步的插入位置。
+**题**：H=7, h(k)=k%7。依次插入 10,22,31,4,15。
 
-**答案**：
-
-- h(10) = 3 → 空，插到位置 3
-- h(22) = 1 → 空，插到位置 1
-- h(31) = 3 → 冲突！探索序列：
-  - i=1: (3+1) % 7 = 4 → 空，插到位置 4
-- h(4) = 4 → 冲突！i=1: (4+1) % 7 = 5 → 空，插到位置 5
-- h(15) = 1 → 冲突！i=1: (1+1) % 7 = 2 → 空，插到位置 2
-
-最终位置：10→3, 22→1, 31→4, 4→5, 15→2
+**答**：10→3；22→1；31→h=3冲突，i=1→(3+1)%7=4✅；4→h=4冲突，i=1→5✅；15→h=1冲突，i=1→2✅。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 10-2：哈希检索</summary>
+<a id="ch11-b"></a>
+## 11. Binary Tree 二叉树
 
-**题目**：使用 10-1 的哈希表，检索关键字 31 的过程是什么？
+### 核心概念
 
-**答案**：
-
-h(31) = 3，位置 3 存的是 10（不是 31）
-- i=1: (3+1) % 7 = 4，位置 4 存的是 31 ✅ 找到
-
-共探测 2 次。
-
-</details>
-
----
-
-## 11. Binary Tree —— 二叉树
-
-### 11.1 二叉树结点
+每个结点最多俩孩子：left 和 right。链式存储——每个结点是 `data + left指针 + right指针`。
 
 ```cpp
-template <class Entry>
-struct Binary_node {
-    Entry data;
-    Binary_node<Entry> *left;
-    Binary_node<Entry> *right;
-    Binary_node() : left(nullptr), right(nullptr) {}
-    Binary_node(const Entry &d)
-        : data(d), left(nullptr), right(nullptr) {}
+template<class E>
+struct Binary_node{
+    E data;
+    Binary_node<E> *left,*right;
+    Binary_node():left(nullptr),right(nullptr){}
+    Binary_node(const E &d):data(d),left(nullptr),right(nullptr){}
 };
 ```
 
-### 11.2 二叉树类
+### 二叉树类 + 三种遍历
 
 ```cpp
-template <class Entry>
-class Binary_tree {
-public:
-    Binary_tree() : root(nullptr), cnt(0) {}
-    bool empty() const { return cnt == 0; }
-    int size() const { return cnt; }
-    int height() const { return height_aux(root); }
-
-    // 三种遍历
-    void preorder(void (*visit)(Entry &))  { preorder_aux(root, visit); }
-    void inorder(void (*visit)(Entry &))   { inorder_aux(root, visit); }
-    void postorder(void (*visit)(Entry &)) { postorder_aux(root, visit); }
-
+template<class E>
+class Binary_tree{
 protected:
-    Binary_node<Entry> *root;
+    Binary_node<E> *root;
     int cnt;
 
-    void clear(Binary_node<Entry> *&t) {
-        if(!t) return;
-        clear(t->left);
-        clear(t->right);
-        delete t;
-        t = nullptr;
+    // 递归遍历辅助
+    void preAux(Binary_node<E> *t,void(*v)(E&)){
+        if(!t)return;
+        v(t->data);            // 根
+        preAux(t->left,v);     // 左
+        preAux(t->right,v);    // 右
+    }
+    void inAux(Binary_node<E> *t,void(*v)(E&)){
+        if(!t)return;
+        inAux(t->left,v);      // 左
+        v(t->data);            // 根
+        inAux(t->right,v);     // 右
+    }
+    void postAux(Binary_node<E> *t,void(*v)(E&)){
+        if(!t)return;
+        postAux(t->left,v);    // 左
+        postAux(t->right,v);   // 右
+        v(t->data);            // 根
     }
 
-    void preorder_aux(Binary_node<Entry> *t, void (*visit)(Entry &)) {
-        if(!t) return;
-        visit(t->data);
-        preorder_aux(t->left, visit);
-        preorder_aux(t->right, visit);
+    int heightAux(Binary_node<E> *t)const{
+        if(!t)return 0;
+        return 1+max(heightAux(t->left),heightAux(t->right));
     }
 
-    void inorder_aux(Binary_node<Entry> *t, void (*visit)(Entry &)) {
-        if(!t) return;
-        inorder_aux(t->left, visit);
-        visit(t->data);
-        inorder_aux(t->right, visit);
+    void clear(Binary_node<E> *&t){
+        if(!t)return;
+        clear(t->left);        // 先递归删左
+        clear(t->right);       // 再递归删右
+        delete t;              // 最后删自己
+        t=nullptr;
     }
 
-    void postorder_aux(Binary_node<Entry> *t, void (*visit)(Entry &)) {
-        if(!t) return;
-        postorder_aux(t->left, visit);
-        postorder_aux(t->right, visit);
-        visit(t->data);
-    }
-
-    int height_aux(Binary_node<Entry> *t) const {
-        if(!t) return 0;
-        return 1 + max(height_aux(t->left), height_aux(t->right));
-    }
+public:
+    Binary_tree():root(nullptr),cnt(0){}
+    bool empty()const{return cnt==0;}
+    int size()const{return cnt;}
+    int height()const{return heightAux(root);}
+    void preorder(void(*v)(E&)){preAux(root,v);}
+    void inorder(void(*v)(E&)){inAux(root,v);}
+    void postorder(void(*v)(E&)){postAux(root,v);}
 };
 ```
 
-### 11.3 三种遍历
+### 遍历图示
 
 ```
-       A
-      / \
-     B   C
-    / \   \
-   D   E   F
+      A
+     / \
+    B   C
+   / \   \
+  D   E   F
 
-前序 (根左右):   A B D E C F
-中序 (左根右):   D B E A C F
-后序 (左右根):   D E B F C A
+前序(根左右): A B D E C F
+中序(左根右): D B E A C F
+后序(左右根): D E B F C A
 ```
 
 ---
 
 <details>
-<summary>📝 题目 11-1：二叉树遍历</summary>
+<summary>📝 题目 11-1：根据遍历序列还原树</summary>
 
-**题目**：已知二叉树前序遍历为 `ABDECF`，中序遍历为 `DBEAFC`，画出该二叉树。
+**题**：前序 ABDECF，中序 DBEAFC，画出树。
 
-**答案**：
-
-由前序知根为 A；由中序知左子树为 DBE，右子树为 FC。
-
-递归：
-- 前序第二个 B 为左子树根；中序 DBE 中 B 在中间，左 D 右 E
-- 前序中 A 后第 4 个 C 为右子树根；中序 FC 中 C 在右边，F 为左
-
-```
-       A
-      / \
-     B   C
-    / \   \
-   D   E   F
-```
+**答**：前序首字母 A 是根；中序 DBEAFC → A 左 DB E，右 FC。递归：左子树根 B，B 左 D 右 E；右子树根 C，C 左 F。即上面那棵树。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 11-2：求二叉树高度</summary>
+<a id="ch12-bst"></a>
+## 12. Binary Search Tree 二叉搜索树
 
-**题目**：写出递归计算二叉树高度的代码。
+### BST 性质
 
-**答案**：
+对任意结点：**左子树所有值 < 结点值 < 右子树所有值**。中序遍历得到有序序列。
 
-```cpp
-int height(Binary_node<Entry> *t) {
-    if(!t) return 0;
-    return 1 + max(height(t->left), height(t->right));
-}
-```
-
-时间复杂度 O(n)，每个结点访问一次。
-
-</details>
-
----
-
-## 12. Binary Search Tree —— 二叉搜索树
-
-### 12.1 BST 性质
-
-对于任意结点，其**左子树所有值 < 结点值 < 右子树所有值**
-
-### 12.2 BST 基本操作
+### BST 类（继承 Binary_tree）
 
 ```cpp
-template <class Record>
-class Search_tree : public Binary_tree<Record> {
+template<class R>
+class Search_tree:public Binary_tree<R>{
 public:
-    Error_code insert(const Record &new_data) {
-        return insert_aux(this->root, new_data);
-    }
-    Error_code remove(const Record &target) {
-        return remove_aux(this->root, target);
-    }
-    Error_code tree_search(Record &target) const {
-        // 查找并返回记录
-        Binary_node<Record> *found = search_for_node(this->root, target);
-        if(!found) return not_present;
-        target = found->data;
+    // 查找——利用 BST 性质二分
+    Error_code search(R &t)const{
+        Binary_node<R> *f=searchNode(this->root,t);
+        if(!f)return not_present;
+        t=f->data;                    // 通过引用返回
         return success;
     }
-    // 额外接口：求叶子数、求和
-    int Leaves() const { return leaves_aux(this->root); }
-    int GetSum() const { return get_sum_aux(this->root); }
 
-private:
-    // 搜索
-    Binary_node<Record>* search_for_node(Binary_node<Record> *t,
-                                         const Record &target) const {
-        if(!t || t->data == target) return t;
-        if(target < t->data)
-            return search_for_node(t->left, target);
-        else
-            return search_for_node(t->right, target);
+    // 插入——递归找空位
+    Error_code insert(const R &d){
+        return insAux(this->root,d);
     }
 
-    // 插入（递归找到空位）
-    Error_code insert_aux(Binary_node<Record> *&t,
-                          const Record &new_data) {
-        if(!t) {
-            t = new Binary_node<Record>(new_data);
+    // 删除——分三种情况
+    Error_code remove(const R &t){
+        return remAux(this->root,t);
+    }
+
+    int leaves()const{return leavesAux(this->root);}
+    int sum()const{return sumAux(this->root);}
+
+private:
+    Binary_node<R>* searchNode(Binary_node<R>*t,const R&d)const{
+        if(!t||t->data==d)return t;
+        if(d<t->data)return searchNode(t->left,d);
+        return searchNode(t->right,d);
+    }
+
+    Error_code insAux(Binary_node<R> *&t,const R&d){
+        if(!t){                       // 找到空位
+            t=new Binary_node<R>(d);
             this->cnt++;
             return success;
         }
-        if(new_data < t->data)
-            return insert_aux(t->left, new_data);
-        else if(new_data > t->data)
-            return insert_aux(t->right, new_data);
-        else
-            return duplicate_error;
+        if(d<t->data)return insAux(t->left,d);
+        if(d>t->data)return insAux(t->right,d);
+        return duplicate_error;       // 等于=重复
     }
 
-    // 删除（三种情况）
-    Error_code remove_aux(Binary_node<Record> *&t,
-                          const Record &target) {
-        if(!t) return not_present;
-        if(target < t->data)
-            return remove_aux(t->left, target);
-        if(target > t->data)
-            return remove_aux(t->right, target);
-        // 找到目标
-        return remove_root(t);
+    Error_code remAux(Binary_node<R> *&t,const R&d){
+        if(!t)return not_present;
+        if(d<t->data)return remAux(t->left,d);
+        if(d>t->data)return remAux(t->right,d);
+        return remRoot(t);           // 找到，删它
     }
 
-    Error_code remove_root(Binary_node<Record> *&t) {
-        if(!t) return not_present;
-        // 情况 1: 叶子
-        if(!t->left && !t->right) {
-            delete t; t = nullptr; this->cnt--;
+    Error_code remRoot(Binary_node<R> *&t){
+        // 情况1：叶子
+        if(!t->left&&!t->right){delete t;t=nullptr;this->cnt--;return success;}
+        // 情况2-a：只有右孩子
+        if(!t->left){
+            Binary_node<R> *tmp=t;
+            t=t->right;              // 用右孩子替代自己
+            delete tmp;this->cnt--;
             return success;
         }
-        // 情况 2: 只有右子树
-        if(!t->left) {
-            Binary_node<Record> *tmp = t;
-            t = t->right;
-            delete tmp; this->cnt--;
+        // 情况2-b：只有左孩子
+        if(!t->right){
+            Binary_node<R> *tmp=t;
+            t=t->left;               // 用左孩子替代自己
+            delete tmp;this->cnt--;
             return success;
         }
-        // 情况 2: 只有左子树
-        if(!t->right) {
-            Binary_node<Record> *tmp = t;
-            t = t->left;
-            delete tmp; this->cnt--;
-            return success;
-        }
-        // 情况 3: 左右子树都有 → 找右子树最小值
-        Binary_node<Record> *parent = t;
-        Binary_node<Record> *succ = t->right;
-        while(succ->left) {
-            parent = succ;
-            succ = succ->left;
-        }
-        t->data = succ->data;
-        // 删除 succ
-        if(parent == t) parent->right = succ->right;
-        else parent->left = succ->right;
-        delete succ; this->cnt--;
+        // 情况3：两个孩子 → 找中序后继（右子树最左）
+        Binary_node<R> *par=t,*succ=t->right;
+        while(succ->left){par=succ;succ=succ->left;}  // 找后继
+        t->data=succ->data;          // 用后继的值替换
+        if(par==t)par->right=succ->right;  // 后继是右孩子
+        else      par->left=succ->right;   // 后继在更深处
+        delete succ;this->cnt--;
         return success;
     }
 
-    int leaves_aux(Binary_node<Record> *t) const {
-        if(!t) return 0;
-        if(!t->left && !t->right) return 1;
-        return leaves_aux(t->left) + leaves_aux(t->right);
+    int leavesAux(Binary_node<R>*t)const{
+        if(!t)return 0;
+        if(!t->left&&!t->right)return 1;
+        return leavesAux(t->left)+leavesAux(t->right);
     }
 
-    int get_sum_aux(Binary_node<Record> *t) const {
-        if(!t) return 0;
-        return t->data + get_sum_aux(t->left) + get_sum_aux(t->right);
+    int sumAux(Binary_node<R>*t)const{
+        if(!t)return 0;
+        return t->data+sumAux(t->left)+sumAux(t->right);
     }
 };
 ```
 
-### 12.3 BST 删除的三种情况
+### BST 删除三种情况
 
-| 情况 | 操作 |
-|------|------|
-| ❌ 叶子结点 | 直接 delete 置空 |
-| ✅ 只有一个孩子 | 用孩子替代当前结点 |
-| 🔄 有两个孩子 | 找右子树最小结点（中序后继）替换值，删除该后继结点 |
+| 情况 | 被删结点 | 操作 |
+|------|---------|------|
+| 1 | 叶子 | 直接 delete |
+| 2 | 只有一个孩子 | 用孩子替代自己 |
+| 3 | 有两个孩子 | 找右子树最小值（中序后继）替换值，删后继 |
 
-### 12.4 Buildable Tree（平衡构建）
+### Buildable Tree
 
-将有序列表递归构建为平衡 BST：
+将排序好的列表递归二分为平衡 BST：
 
 ```cpp
-template <class Record>
-class Buildable_tree : public Search_tree<Record> {
-public:
-    Error_code build_tree(List<Record> &list) {
-        // 清空旧树
-        this->clear(this->root);
-        return build_subtree(list, 0, list.size() - 1);
-    }
-private:
-    Binary_node<Record>* build_subtree(List<Record> &list,
-                                        int low, int high) {
-        if(low > high) return nullptr;
-        int mid = (low + high) / 2;
-        Binary_node<Record> *node = new Binary_node<Record>;
-        // 获取 mid 位置的值
-        Record val; list.retrieve(mid, val);
-        node->data = val;
-        node->left = build_subtree(list, low, mid - 1);
-        node->right = build_subtree(list, mid + 1, high);
-        return node;
-    }
-};
+Binary_node<R>* buildSubtree(List<R>&l,int lo,int hi){
+    if(lo>hi)return nullptr;
+    int mid=(lo+hi)/2;              // 中间值做根
+    Binary_node<R>*n=new Binary_node<R>;
+    R val;l.retrieve(mid,val);
+    n->data=val;
+    n->left=buildSubtree(l,lo,mid-1);
+    n->right=buildSubtree(l,mid+1,hi);
+    return n;
+}
 ```
 
 ---
@@ -1601,772 +1260,237 @@ private:
 <details>
 <summary>📝 题目 12-1：BST 插入</summary>
 
-**题目**：将关键字序列 [5, 3, 7, 2, 4, 6, 8] 依次插入空 BST，画出最终树形。
+**题**：依次插入 [5,3,7,2,4,6,8]。
 
-**答案**：
-
+**答**：
 ```
-        5
-       / \
-      3   7
-     / \ / \
-    2  4 6  8
+    5
+   / \
+  3   7
+ / \ / \
+2  4 6 8
 ```
-
-插入顺序：
-- 5 作为根
-- 3 < 5 → 左
-- 7 > 5 → 右
-- 2 < 5 → 左 → 2 < 3 → 左
-- 4 < 5 → 左 → 4 > 3 → 右
-- 6 > 5 → 右 → 6 < 7 → 左
-- 8 > 5 → 右 → 8 > 7 → 右
 
 </details>
-
----
 
 <details>
-<summary>📝 题目 12-2：BST 删除</summary>
+<summary>📝 题目 12-2：BST 删根</summary>
 
-**题目**：在 12-1 的树中删除根结点 5，画出删除后的树。
+**题**：上树删 5。
 
-**答案**：
-
-删除 5（有两个孩子）：
-- 找右子树最小值：6（右子树的最左结点）
-- 将 5 的值替换为 6
-- 删除原来的 6（叶子结点，直接删除）
-
+**答**：找右子树最小值 6 替换，删原 6：
 ```
-        6
-       / \
-      3   7
-     / \   \
-    2  4    8
+    6
+   / \
+  3   7
+ / \   \
+2  4    8
 ```
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 12-3：BST 查找与性能</summary>
+<a id="ch13-a"></a>
+## 13. AVL Tree 平衡二叉搜索树
 
-**题目**：BST 中查找一个元素的平均和最坏时间复杂度是多少？
+### AVL 定义
 
-**答案**：
-
-- **平均**：O(log n) —— 树较平衡时
-- **最坏**：O(n) —— 树退化为链表时（如插入有序序列 1,2,3,...,n）
-
-提高平衡性的方法：用 Buildable_tree 预先建树，或使用 AVL / 红黑树等平衡 BST。
-
-</details>
-
----
-
-## 13. AVL Tree —— 平衡二叉搜索树
-
-### 13.1 AVL 树定义
-
-AVL 树是**自平衡二叉搜索树**，任一结点的左右子树高度差不超过 1。
-
-```
-平衡因子 = 左子树高度 - 右子树高度
-bf ∈ {-1, 0, 1}
-```
+自平衡 BST：任一结点左右子树高度差 ≤ 1。平衡因子 bf = 左高 - 右高 ∈ {-1,0,1}。
 
 ```cpp
-enum Balance_factor { left_higher, equal_height, right_higher };
-// left_higher  = +1 (左高)
-// equal_height =  0 (等高)
-// right_higher = -1 (右高)
+enum Balance_factor{left_higher,equal_height,right_higher};
 ```
 
-### 13.2 AVL 结点（继承 Binary_node）
+### AVL 结点
 
 ```cpp
-template <class Record>
-struct AVL_node : public Binary_node<Record> {
+template<class R>
+struct AVL_node:public Binary_node<R>{
     Balance_factor balance;
-    AVL_node() : balance(equal_height) {
-        this->left = nullptr;
-        this->right = nullptr;
-    }
-    AVL_node(const Record &x) : balance(equal_height) {
-        this->data = x;
-        this->left = nullptr;
-        this->right = nullptr;
-    }
-    void set_balance(Balance_factor b) { balance = b; }
-    Balance_factor get_balance() const { return balance; }
+    AVL_node():balance(equal_height){this->left=this->right=nullptr;}
+    AVL_node(const R&x):balance(equal_height){this->data=x;this->left=this->right=nullptr;}
+    void set_balance(Balance_factor b){balance=b;}
+    Balance_factor get_balance()const{return balance;}
 };
 ```
 
-> **注意**：`Binary_node` 中也要提供虚函数版本，但返回 `equal_height` 以区分普通结点和 AVL 结点。
+### 四种失衡与旋转
 
-### 13.3 四种失衡类型与旋转
-
-| 失衡类型 | 描述 | 操作 | 形象记忆 |
-|---------|------|------|---------|
-| **LL** | 插入在左子树的左子树 | 右旋一次 | "左边太重，往右扳" |
-| **RR** | 插入在右子树的右子树 | 左旋一次 | "右边太重，往左扳" |
-| **LR** | 插入在左子树的右子树 | 先左旋后右旋 | "先掰直再扳正" |
-| **RL** | 插入在右子树的左子树 | 先右旋后左旋 | "先掰直再扳正" |
-
-#### 左旋 (Rotate Left)
-
-```
-     A               B
-      \    左旋      / \
-       B   ────→    A   C
-        \
-         C
-```
-
-```cpp
-void rotate_left(Binary_node<Record> *&sub_root) {
-    Binary_node<Record> *right_tree = sub_root->right;
-    sub_root->right = right_tree->left;
-    right_tree->left = sub_root;
-    sub_root = right_tree;
-}
-```
-
-#### 右旋 (Rotate Right)
-
-```
-       A             B
-      /    右旋     / \
-     B     ────→   C   A
-    /
-   C
-```
-
-```cpp
-void rotate_right(Binary_node<Record> *&sub_root) {
-    Binary_node<Record> *left_tree = sub_root->left;
-    sub_root->left = left_tree->right;
-    left_tree->right = sub_root;
-    sub_root = left_tree;
-}
-```
-
-### 13.4 Insert 后的再平衡
-
-插入新结点后沿路径回溯，遇到平衡因子变为 ±2 时再平衡。
-
-#### right_balance —— 右子树过高的处理
-
-适用于从右子树插入后 `sub_root` 变为 `right_higher` 且 `taller == true`：
-
-```cpp
-void right_balance(Binary_node<Record> *&sub_root) {
-    Binary_node<Record> *&right_tree = sub_root->right;
-    switch(right_tree->get_balance()) {
-        case right_higher:      // RR → 单左旋
-            sub_root->set_balance(equal_height);
-            right_tree->set_balance(equal_height);
-            rotate_left(sub_root);
-            break;
-        case equal_height:      // 理论上不会发生（taller==true 时不可能）
-            break;
-        case left_higher: {     // RL → 先右旋再左旋（双旋）
-            Binary_node<Record> *sub_tree = right_tree->left;
-            switch(sub_tree->get_balance()) {
-                case equal_height:
-                    sub_root->set_balance(equal_height);
-                    right_tree->set_balance(equal_height);
-                    break;
-                case left_higher:
-                    sub_root->set_balance(equal_height);
-                    right_tree->set_balance(right_higher);
-                    break;
-                case right_higher:
-                    sub_root->set_balance(left_higher);
-                    right_tree->set_balance(equal_height);
-                    break;
-            }
-            sub_tree->set_balance(equal_height);
-            rotate_right(right_tree);
-            rotate_left(sub_root);
-            break;
-        }
-    }
-}
-```
-
-#### left_balance —— 左子树过高的处理（right_balance 的镜像）
-
-```cpp
-void left_balance(Binary_node<Record> *&sub_root) {
-    Binary_node<Record> *&left_tree = sub_root->left;
-    switch(left_tree->get_balance()) {
-        case left_higher:       // LL → 单右旋
-            sub_root->set_balance(equal_height);
-            left_tree->set_balance(equal_height);
-            rotate_right(sub_root);
-            break;
-        case equal_height:
-            break;
-        case right_higher: {    // LR → 先左旋再右旋（双旋）
-            Binary_node<Record> *sub_tree = left_tree->right;
-            switch(sub_tree->get_balance()) {
-                case equal_height:
-                    sub_root->set_balance(equal_height);
-                    left_tree->set_balance(equal_height);
-                    break;
-                case right_higher:
-                    sub_root->set_balance(equal_height);
-                    left_tree->set_balance(left_higher);
-                    break;
-                case left_higher:
-                    sub_root->set_balance(right_higher);
-                    left_tree->set_balance(equal_height);
-                    break;
-            }
-            sub_tree->set_balance(equal_height);
-            rotate_left(left_tree);
-            rotate_right(sub_root);
-            break;
-        }
-    }
-}
-```
-
-### 13.5 Insert 完整流程
-
-```cpp
-Error_code avl_insert(Binary_node<Record> *&sub_root,
-                      const Record &new_data, bool &taller) {
-    if(sub_root == nullptr) {
-        sub_root = new AVL_node<Record>(new_data);
-        taller = true;
-    }
-    else if(new_data == sub_root->data) {
-        return duplicate_error;   // 不允许重复
-        taller = false;
-    }
-    else if(new_data < sub_root->data) {
-        // 在左子树插入
-        result = avl_insert(sub_root->left, new_data, taller);
-        if(taller) {
-            switch(sub_root->get_balance()) {
-                case left_higher:   // 原本左高 → 变左左高 → 再平衡
-                    left_balance(sub_root);
-                    taller = false;
-                    break;
-                case equal_height:  // 原本等高 → 变左高
-                    sub_root->set_balance(left_higher);
-                    break;
-                case right_higher:  // 原本右高 → 变等高
-                    sub_root->set_balance(equal_height);
-                    taller = false;
-                    break;
-            }
-        }
-    }
-    else {
-        // 在右子树插入（对称逻辑）
-        result = avl_insert(sub_root->right, new_data, taller);
-        if(taller) {
-            switch(sub_root->get_balance()) {
-                case left_higher:
-                    sub_root->set_balance(equal_height);
-                    taller = false;
-                    break;
-                case equal_height:
-                    sub_root->set_balance(right_higher);
-                    break;
-                case right_higher:
-                    right_balance(sub_root);
-                    taller = false;
-                    break;
-            }
-        }
-    }
-    return result;
-}
-```
-
-### 13.6 Remove 后的再平衡
-
-删除操作的再平衡与插入对称但更复杂，因为删除导致子树变矮后，失衡可能向上传播。
-
-删除再平衡的平衡因子调整规则（以从**左子树删除**导致 `shorter == true` 为例）：
-
-```
-sub_root 原平衡因子   操作                shorter
-left_higher (+1)   → 设为 equal_height    true（继续向上传播）
-equal_height  (0)  → 设为 right_higher    false（停止传播）
-right_higher (-1)  → right_balance2()    由旋转决定
-```
-
-#### right_balance2 —— 删除场景的右侧再平衡
-
-与 `right_balance` 的区别：多了一种 `equal_height` 情况（插入时不可能，但删除时可能）：
-
-```cpp
-bool right_balance2(Binary_node<Record> *&sub_root) {
-    bool shorter;
-    Binary_node<Record> *&right_tree = sub_root->right;
-    switch(right_tree->get_balance()) {
-        case right_higher:      // RR → 单左旋，树变矮
-            sub_root->set_balance(equal_height);
-            right_tree->set_balance(equal_height);
-            rotate_left(sub_root);
-            shorter = true;
-            break;
-        case equal_height:      // 单左旋，树不变矮（删除独有）
-            right_tree->set_balance(left_higher);
-            rotate_left(sub_root);
-            shorter = false;
-            break;
-        case left_higher: {     // RL → 双旋，树变矮
-            // ... 与 right_balance 的 left_higher 分支一致 ...
-            shorter = true;
-            break;
-        }
-    }
-    return shorter;
-}
-```
-
-### 13.7 AVL 类全貌
-
-```cpp
-template <class Record>
-class AVL_tree : public Search_tree<Record> {
-public:
-    Error_code insert(const Record &new_data);
-    Error_code remove(Record &old_data);
-private:
-    Error_code avl_insert(Binary_node<Record> *&sub_root,
-                          const Record &new_data, bool &taller);
-    void rotate_left(Binary_node<Record> *&sub_root);
-    void rotate_right(Binary_node<Record> *&sub_root);
-    void right_balance(Binary_node<Record> *&sub_root);
-    void left_balance(Binary_node<Record> *&sub_root);
-    // 删除相关
-    Error_code avl_remove(Binary_node<Record> *&sub_root,
-                          Record &new_data, bool &shorter);
-    bool right_balance2(Binary_node<Record> *&sub_root);
-    bool left_balance2(Binary_node<Record> *&sub_root);
-};
-```
-
-### 13.8 课件参考代码的常见漏洞
-
-> 这是 Wk15 作业的核心——找出并修复参考代码中的遗留 bug。
-
-| # | 漏洞 | 表现 | 修复 |
-|---|------|------|------|
-| 1 | `right_balance` 中 `case equal_height` 无 `break` | fallthrough 执行双旋 | 加 `break` |
-| 2 | `left_balance` 中 `case equal_height` 无 `break` + 错误信息写错 | fallthrough + 提示"right balance" | 加 `break`，改为"left_balance" |
-| 3 | case 标签内声明变量无作用域括号 | 编译错误 "crosses initialization" | 用 `{}` 包裹 |
-| 4 | `left_balance2` 函数体完全为空 | 删除后无法再平衡 | 完整实现（镜像 `right_balance2`） |
-| 5 | `sub_record.the_key()!=0` 哨兵检查 | key=0 时数据替换被跳过 | 改用 `bool has_sub_record` |
-| 6 | 头文件缺少 include 守卫 | 重复定义 | 加 `#pragma once` |
-| 7 | `using namespace std` 导致 `left`/`right` 命名冲突 | 与 `std::left`/`std::right` 冲突 | 用 `this->` 限定 |
-
----
-
-<details>
-<summary>📝 题目 13-1：AVL 插入与旋转</summary>
-
-**题目**：依次将关键字 [7, 4, 9, 2, 5, 8, 11, 1, 3, 6] 插入空 AVL 树。当插入 1 时触发了什么旋转？画出最终 AVL 树。
-
-**答案**：
-
-插入过程：
-- 7 → 根
-- 4 → 左
-- 9 → 右
-- 2 → 7左→4左
-- 5 → 7左→4右
-- 8 → 7右→9左
-- 11 → 7右→9右
-- 1 → 7左→4左→2左
-
-此时结点 2 平衡因子变为 left_higher，沿路径回溯：
-- 结点 4 左子树高度 2，右子树高度 1 → bf = left_higher（正常）
-- 结点 7 左子树高度 3（4→2→1），右子树高度 2（9→8,11） → bf = left_higher（正常）
-
-继续回溯到...等一下，再仔细算。
-
-```
-插入 1 后的树（1 为 2 的左孩子）：
-        7
-       / \
-      4   9
-     / \ / \
-    2  5 8 11
-   /
-  1
-```
-
-结点 4 的左子树高=2 (2→1)，右子树高=1 (5) → bf = left_higher (+1) ✅
-结点 7 的左子树高=3 (4→2→1)，右子树高=2 (9→8,11) → bf = left_higher (+1) ✅
-
-再插入 3：
-```
-        7
-       / \
-      4   9
-     / \ / \
-    2  5 8 11
-   / \
-  1   3
-```
-
-结点 2 平衡因子 = 0 ✅
-结点 4 左子树高=2 (2→1,3)，右子树高=1 → bf = left_higher ✅
-结点 7 左子树高=3，右子树高=2 → bf = left_higher ✅
-
-再插入 6：
-```
-        7
-       / \
-      4   9
-     / \ / \
-    2  5 8 11
-   / \  \
-  1   3  6
-```
-
-结点 5 → bf = right_higher → 回溯到 4：
-结点 4 左子树高=2 (2→1,3)，右子树高=2 (5→6) → bf = equal_height ✅
-
-最终 AVL 树：
-
-```
-        7
-       / \
-      4   9
-     / \ / \
-    2  5 8 11
-   / \  \
-  1  3  6
-```
-
-全程没有触发旋转，因为树始终保持平衡。
-
-但若按另一种顺序插入 `[1, 2, 3, 4, 5, 6, 7]`：
-- 1 → 根
-- 2 → 右 → 平衡 ✅
-- 3 → 右 → 结点 1 失衡，RR → 左旋
-
-```
-左旋后：
-    2
-   / \
-  1   3
-```
-
-- 4 → 右 → 结点 2 失衡，RR → 左旋
-
-```
-    2                4
-   / \              / \
-  1   3    →       2  ...
-        \         / \
-         4       1   3
-```
-
-最终逐步构造出平衡树。
-
-</details>
-
----
-
-<details>
-<summary>📝 题目 13-2：AVL 删除与再平衡</summary>
-
-**题目**：在以下 AVL 树中删除结点 9，描述再平衡过程。
-
-```
-        8
-       / \
-      4   12
-     / \  / \
-    2  6 10 14
-   /|\
-  1 3 5 7
-```
-
-**答案**：
-
-删除 9（不在树中，假设删除 12 吧... 删除 10 吧）：
-
-删除 10（叶子结点，直接删除）：
-```
-        8
-       / \
-      4   12
-     / \    \
-    2  6    14
-   /|\
-  1 3 5 7
-```
-
-结点 12 的 bf 从 `equal_height` 变为 `right_higher` ✅
-结点 8 左子树高=3，右子树高=2 → bf = left_higher ✅
-未失衡。
-
----
-
-换个例子：在上树中删除 14（叶子 → 直接删）：
-
-```
-        8
-       / \
-      4   12
-     / \  /
-    2  6 10
-   /|\
-  1 3 5 7
-```
-
-结点 12 的 bf 变为 left_higher ✅
-结点 8 左右子树均为高 3 → bf = equal_height ✅
-
-再删除 10（叶子）：
-
-```
-        8
-       / \
-      4   12
-     / \
-    2  6
-   /|\
-  1 3 5 7
-```
-
-结点 12 的 bf 变为 equal_height，但 shorter = true
-回溯到 8：左子树高=3，右子树高=1（12 没有孩子）
-→ bf = left_higher 且 shorter = true → 从右子树删除导致左子树过高
-
-进入 `left_balance2`：
-- 左子树 4 的平衡因子？左子树 2 高 2，右子树 6 高 2 → equal_height
-- `case equal_height`：单右旋，shorter = false
-
-```
-单右旋后：
-        4
-       / \
-      2   8
-     /|\  /
-    1 3 6 12
-       /\
-      5  7
-```
-
-</details>
-
----
-
-<details>
-<summary>📝 题目 13-3：四类失衡判断</summary>
-
-**题目**：判断以下每种情况属于 LL / RR / LR / RL 中的哪一类，以及对应的旋转操作。
-
-(a) 在 AVL 树的右子树的右子树上插入
-(b) 在 AVL 树的左子树的右子树上插入
-(c) 在 AVL 树的左子树的左子树上插入
-(d) 在 AVL 树的右子树的左子树上插入
-
-**答案**：
-
-| 情况 | 类型 | 操作 |
+| 类型 | 动作 | 旋转 |
 |------|------|------|
-| (a) 右子树的右子树 | **RR** | 单左旋 |
-| (b) 左子树的右子树 | **LR** | 先左旋再右旋（双旋） |
-| (c) 左子树的左子树 | **LL** | 单右旋 |
-| (d) 右子树的左子树 | **RL** | 先右旋再左旋（双旋） |
+| **LL** | 左子树的左子树插入 | 右旋一次 |
+| **RR** | 右子树的右子树插入 | 左旋一次 |
+| **LR** | 左子树的右子树插入 | 先左旋再右旋 |
+| **RL** | 右子树的左子树插入 | 先右旋再左旋 |
 
-记忆口诀：**"左左→右旋，右右→左旋，左右→左右旋，右左→右左旋"**
+```cpp
+// 左旋：把右边的孩子转上来
+void rotate_left(Binary_node<R>*&root){
+    Binary_node<R>*rt=root->right;
+    root->right=rt->left;      // 右孩子的左子树挂给自己
+    rt->left=root;              // 自己变成右孩子的左孩子
+    root=rt;                    // 右孩子上位
+}
+
+// 右旋：把左边的孩子转上来（镜像）
+void rotate_right(Binary_node<R>*&root){
+    Binary_node<R>*lt=root->left;
+    root->left=lt->right;
+    lt->right=root;
+    root=lt;
+}
+```
+
+### 插入再平衡
+
+沿路径回溯，遇到 bf 变成 ±2 时进 `left_balance` 或 `right_balance`。
+
+```cpp
+// 插入左边后子树变高
+if(taller){
+    switch(sub_root->get_balance()){
+        case left_higher:        // 原本左高→失衡
+            left_balance(sub_root);
+            taller=false;        // 旋转后高度恢复
+            break;
+        case equal_height:       // 原本等高→变左高
+            sub_root->set_balance(left_higher);
+            break;
+        case right_higher:       // 原本右高→变等高
+            sub_root->set_balance(equal_height);
+            taller=false;
+            break;
+    }
+}
+```
+
+### 删除再平衡
+
+删除比插入复杂：删完子树变矮（shorter=true）时沿路径检查。
+
+**right_balance2** 比 `right_balance` 多一种 `equal_height` 情况（插入不可能出现，删除可能）。
+
+### 课件七漏洞速查
+
+| # | 问题 | 后果 | 修复 |
+|---|------|------|------|
+| 1 | `right_balance` 中 equal_height 无 break | fall-through 到双旋 | 加 break |
+| 2 | `left_balance` 同上 + 错误信息写错 | 同上 | 加 break+改文字 |
+| 3 | case 里声明变量无花括号 | 编译错误 "crosses init" | 加 `{}` |
+| 4 | `left_balance2` 函数体为空 | 删除后无法再平衡 | 填完整实现 |
+| 5 | `the_key()!=0` 当哨兵 | key=0 时失效 | 改 bool 标记 |
+| 6 | 头文件缺 `#pragma once` | 重复定义 | 补上 |
+| 7 | `using namespace std` 致 left/right 歧义 | 编译错误 | `this->` 限定 |
+
+---
+
+<details>
+<summary>📝 题目 13-1：四类失衡</summary>
+
+**题**：判断类型。(a) 右子树的右子树插入 (b) 左子树的右子树插入 (c) 左子树的左子树插入 (d) 右子树的左子树插入。
+
+**答**：(a)RR→左旋 (b)LR→先左再右 (c)LL→右旋 (d)RL→先右再左。口诀：左左右旋，右右左旋，左右→左右旋，右左→右左旋。
+
+</details>
+
+<details>
+<summary>📝 题目 13-2：AVL 插入推演</summary>
+
+**题**：依次插入 [1,2,3,4] 到空 AVL。
+
+**答**：1 根；2 右边；3 入→RR→左旋得 `2(左1右3)`；4 入→RR→左旋得 `2(左1,右3(右4))`。每个时刻树都是平衡的。
 
 </details>
 
 ---
 
+<a id="ch14-oop"></a>
 ## 14. C++ OOP 进阶
 
 ### 14.1 深拷贝 vs 浅拷贝
 
 ```cpp
-class List {
-private:
-    Node *head;
-    int _size;
-
-    void copyFrom(const List &other) {
-        if(!other.head) { head = nullptr; _size = 0; return; }
-        head = new Node(other.head->data);
-        Node *curr = head;
-        Node *ocurr = other.head->next;
-        while(ocurr) {
-            curr->next = new Node(ocurr->data);
-            curr = curr->next;
-            ocurr = ocurr->next;
-        }
-        _size = other._size;
-    }
-
+class List{
+    Node *head;int _sz;
 public:
-    // 拷贝构造函数
-    List(const List &other) : head(nullptr), _size(0) {
-        copyFrom(other);
-    }
+    // 析构：释放链表所有结点
+    ~List(){clear();}
 
-    // 赋值运算符
-    List& operator=(const List &other) {
-        if(this != &other) {   // 防止自赋值
-            clear();           // 释放已有资源
-            copyFrom(other);   // 深拷贝
-        }
+    // 拷贝构造：深拷贝，逐个结点 new
+    List(const List&o):head(nullptr),_sz(0){copyFrom(o);}
+
+    // 赋值：先释放自己，再深拷贝
+    List& operator=(const List&o){
+        if(this!=&o){clear();copyFrom(o);}  // 防自赋值
         return *this;
     }
-
-    // 析构函数
-    ~List() { clear(); }
 };
 ```
 
-**三/五法则（Rule of Three/Five）**：若类需要自定义析构函数，则也必须自定义拷贝构造函数和拷贝赋值运算符。
+**三/五法则**：定义了析构函数就必须定义拷贝构造和赋值。因为编译器默认的是浅拷贝（只复制指针值）。
 
-### 14.2 Error_code 枚举
+### 14.2 继承
 
 ```cpp
-enum Error_code {
-    success,       // 操作成功
-    underflow,     // 下溢：容器已空
-    overflow,      // 上溢：容器已满
-    range_error,   // 范围错误
-    not_present,   // 找不到
-    duplicate_error // 重复
+// Search_tree 继承 Binary_tree——获得 root、cnt、遍历方法
+template<class R>
+class Search_tree:public Binary_tree<R>{
+    // 这里能直接用 this->root、this->cnt
 };
 ```
 
 ### 14.3 运算符重载
 
 ```cpp
-// 重载 << 用于自定义类输出
-ostream& operator<<(ostream &out, const Record &r) {
-    out << "(" << r.key << ", " << r.other << ")";
-    return out;
-}
-
-// 重载 < 用于比较
-bool operator<(const Record &a, const Record &b) {
-    return a.key < b.key;
-}
+// 重载 < 用于 Record 比较
+bool operator<(const Record &a,const Record &b){return a.the_key()<b.the_key();}
+// 重载 << 用于输出
+ostream& operator<<(ostream &out,const Record &r){out<<r.the_key();return out;}
 ```
 
-### 14.4 继承
+### 14.4 函数指针
 
 ```cpp
-// Search_tree 继承 Binary_tree
-template <class Record>
-class Search_tree : public Binary_tree<Record> {
-    // 继承所有 public/protected 成员
-    // 可以访问 this->root、this->cnt
-public:
-    Error_code insert(const Record &new_data);
-    Error_code remove(const Record &target);
-    Error_code tree_search(Record &target) const;
-};
-```
-
-### 14.5 函数指针遍历模式
-
-```cpp
-// 遍历时通过函数指针自定义操作
-template <typename T>
-void traverse(Node<T> *head, void (*visit)(T &)) {
-    Node<T> *curr = head;
-    while(curr) {
-        visit(curr->data);
-        curr = curr->next;
-    }
-}
-
-void print(int &x) { cout << x << endl; }
-void update(int &x) { x *= 2; }
-
-// 使用
-List<int> mylist;
-mylist.traverse(print);   // 遍历输出
-mylist.traverse(update);  // 遍历更新
+void print(int&x){cout<<x<<endl;}
+void update(int&x){x*=2;}
+list.traverse(print);     // 输出
+list.traverse(update);    // 翻倍
 ```
 
 ---
 
 <details>
-<summary>📝 题目 14-1：深拷贝 vs 浅拷贝</summary>
+<summary>📝 题目 14-1：三/五法则</summary>
 
-**题目**：一个链表类含有 `Node *head` 成员，若不定义拷贝构造函数，以下代码会出什么问题？
+**题**：为什么链表类必须同时定义析构、拷贝构造、赋值运算符？
 
-```cpp
-List a;
-a.insert(0, 5);
-List b = a;   // 浅拷贝
-```
-
-**答案**：
-
-浅拷贝导致 a 和 b 的 head 指向同一内存。问题：
-1. 修改 b 会同时影响 a
-2. 析构时 a 和 b 都会 delete 同一块内存 → **double free**
-3. 若先析构 a，b 的 head 变为悬空指针 → **use after free**
-
-解决方案：实现深拷贝构造函数和赋值运算符。
+**答**：链表用 new 分配堆内存。编译器默认的三者都是浅拷贝——只复制指针，不复制数据。会导致：修改一个影响另一个、double free、悬空指针。三点必须同时深拷贝。
 
 </details>
 
 ---
 
-<details>
-<summary>📝 题目 14-2：三/五法则</summary>
-
-**题目**：为什么链表类需要同时定义析构函数、拷贝构造函数和赋值运算符？
-
-**答案**：
-
-因为链表使用动态内存（new/delete），编译器默认生成的拷贝构造只是浅拷贝（复制指针值）。三条必须同时定义：
-1. **析构函数**：释放动态分配的结点内存，防止内存泄漏
-2. **拷贝构造函数**：创建新链表时深拷贝所有结点
-3. **赋值运算符**：处理已存在的链表对象赋值，需先释放旧资源再深拷贝，并处理自赋值情况
-
-</details>
-
----
-
+<a id="ch15-err"></a>
 ## 15. 经典错误自查表
 
-> 来自 Wk1~Wk14 实际调试经验
-
-| # | 错误 | 原因 | 解决方案 |
-|---|------|------|---------|
-| 1 | vector 越界 | 声明后未 `resize` 直接用 `cin >> v[j]` | `v.resize(n)` 或 `push_back` |
-| 2 | getline 读空行 | `cin >>` 后未清理换行符 | 加 `cin.ignore(...)` |
-| 3 | 循环脏数据 | 字符串未清空累积 | 每次循环后 `s = ""` 或用副本 |
-| 4 | DP 下标偏移 | `dp[i][j]` 对应 `A[i-1]B[j-1]` 混淆 | 边界 +1，注意一一对应 |
-| 5 | 数组越界 | VLA 访问到 `[n]` 以外 | 循环边界精确对应 `<=n` |
-| 6 | 比较器传值 | 排序比较器没用引用，大量拷贝 | 使用 `const &` |
-| 7 | 整数除法 | `a/b` 截断为整数 | 交叉相乘避免浮点 |
-| 8 | 队列判空判满 | 边界条件遗漏 | `front == rear` 为空 |
-| 9 | 哈希表标记删除 | 线性探测删除后查找中断 | 使用删除标记而非直接置空 |
-| 10 | BST 删除双孩子 | 只替换值未删除后继结点 | 找右子树最小值替换后删除之 |
-
----
-
-> 💡 **复习建议**：
-> - 每个知识点的代码**手写 2~3 遍**，不要只看
-> - 重点掌握：栈与队列的应用、链表操作、八皇后回溯、六种排序、哈希表二次探测、BST 插入删除
-> - 最后的 OJ 题多体现 **三段式结构**：读入 → 处理 → 输出
+| # | 错误 | 错因 | 修法 |
+|---|------|------|------|
+| 1 | vector 越界 | 没 resize 就索引访问 | resize 或用 push_back |
+| 2 | getline 读空行 | cin>> 后换行符没吃掉 | cin.ignore(...) |
+| 3 | 循环脏数据 | 上轮字符串没清空 | 无条件 s="" |
+| 4 | DP 下标偏移 | dp[i][j] 对应 A[i-1] 混淆 | 边界 +1 精确对应 |
+| 5 | VLA 越界 | 循环边界超出声明大小 | 边界 ≤ m, ≤ n |
+| 6 | sort comp 传值 | 没用引用，大量拷贝 | 全用 const & |
+| 7 | a/b 截断 | 整数除法丢掉小数 | 交叉相乘比较 |
+| 8 | 队列判空 | front==rear 搞反 | 循环队列用 cnt |
+| 9 | 哈希删后查 | 直接置空打断探测 | 用墓碑标记 deleted |
+| 10 | BST 删双孩 | 只换值忘了删后继 | 值替换 + 原后继 delete |
+| 11 | switch fall-through | case 后漏 break | 补 break |
+| 12 | `the_key()==0` 当哨兵 | key 真可能为 0 | 用 bool 标记 |
+| 13 | left/right 命名冲突 | using namespace std + 成员叫 left | 用 this->  |
+| 14 | 头文件无守卫 | 重复 include 重定义 | #pragma once |
 
 ---
 
-*期末加油！ —— 来自 Wk1~Wk15 的全部精华*
+*期末加油！手写代码 + 推演过程 + 搞懂每行原理 = 稳过。*
