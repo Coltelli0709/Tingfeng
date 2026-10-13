@@ -10,7 +10,7 @@
         <router-link
           v-for="cat in navCategories"
           :key="cat"
-          :to="cat === allLink ? '/' : `/?section=${cat}`"
+          :to="cat === allLink ? `/?section=${ALL_SECTIONS}` : `/?section=${cat}`"
           class="site-header__link"
           :class="{ 'site-header__link--active': isActive(cat) }"
         >
@@ -25,7 +25,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import gsap from 'gsap'
-import { allSections } from '@/utils/posts'
+import { allSections, DEFAULT_SECTION, ALL_SECTIONS } from '@/utils/posts'
 
 const allLink = '所有'
 
@@ -36,8 +36,9 @@ const navCategories = computed(() => {
 const route = useRoute()
 
 function isActive(cat: string): boolean {
-  if (cat === allLink) return !route.query.section
-  return route.query.section === cat
+  const s = route.query.section as string | undefined
+  if (cat === allLink) return s === ALL_SECTIONS
+  return (s ?? DEFAULT_SECTION) === cat
 }
 
 const headerRef = ref<HTMLElement>()

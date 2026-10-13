@@ -3,11 +3,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import MarkdownIt from 'markdown-it'
+import { slugifyHeading, type TocHeading } from '@/utils/toc'
 
 const props = defineProps<{
   content: string
+}>()
+
+/* 渲染完成后把标题清单抛给父组件（Post.vue）用于生成目录 */
+const emit = defineEmits<{
+  headings: [items: TocHeading[]]
 }>()
 
 const md = new MarkdownIt({
@@ -17,10 +23,43 @@ const md = new MarkdownIt({
   breaks: true,
 })
 
-const rendered = computed(() => {
-  if (!props.content) return '<p style="color: var(--gray-400)">（空内容）</p>'
-  return md.render(props.content)
+const result = computed<{ html: string; headings: TocHeading[] }>(() => {
+  const src = props.content
+  if (!src) {
+    return {
+      html: '<p style="color: var(--gray-400)">（空内容）</p>',
+      headings: [],
+    }
+  }
+
+  const env = {}
+  const tokens = md.parse(src, env)
+  const used: Record<string, number> = {}
+  const headings: TocHeading[] = []
+
+  // 给每个标题写入 id，并同步收集目录项
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i]
+    if (t.type !== 'heading_open') continue
+    const level = Number(t.tag.slice(1))
+    const inline = tokens[i + 1]
+    const rawText = (inline?.content ?? '').trim()
+    const id = slugifyHeading(rawText, used)
+    t.attrSet('id', id)
+    headings.push({ level, text: rawText.replace(/[*_`~]/g, ''), id })
+  }
+
+  return { html: md.renderer.render(tokens, md.options, env), headings }
 })
+
+const rendered = computed(() => result.value.html)
+
+onMounted(() => emit('headings', result.value.headings))
+
+watch(
+  () => result.value.headings,
+  (h) => emit('headings', h),
+)
 </script>
 
 <style scoped>
@@ -41,6 +80,14 @@ const rendered = computed(() => {
   margin: 1.5em 0 0.5em;
   padding-bottom: 0.3em;
   border-bottom: 2px solid var(--blue-100);
+}
+
+/* 目录跳转时给粘性导航栏留出空间 */
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4) {
+  scroll-margin-top: 84px;
 }
 
 .markdown-body :deep(h2) {

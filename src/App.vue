@@ -1,6 +1,7 @@
 <template>
   <div class="app-shell">
     <SiteHeader />
+    <SideRail />
     <main class="app-main">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
@@ -13,6 +14,7 @@
 
 <script setup lang="ts">
 import SiteHeader from '@/components/SiteHeader.vue'
+import SideRail from '@/components/SideRail.vue'
 </script>
 
 <style scoped>
@@ -24,5 +26,12 @@ import SiteHeader from '@/components/SiteHeader.vue'
 
 .app-main {
   flex: 1;
+}
+
+/* 宽屏：为左侧功能栏预留空间，避免压住正文 */
+@media (min-width: 1024px) {
+  .app-main {
+    padding-left: 96px;
+  }
 }
 </style>

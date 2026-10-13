@@ -9,7 +9,7 @@
         <h1 class="home__title">文章</h1>
         <p class="home__subtitle">
           共 {{ filteredPosts.length }} 篇
-          <template v-if="activeSection"> · {{ activeSection }}</template>
+          <template v-if="sectionLabel"> · {{ sectionLabel }}</template>
           <template v-if="activeCategory !== '全部'">
             / {{ activeCategory }}
           </template>
@@ -104,7 +104,7 @@
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
-import { allPosts, filterByDateRange } from '@/utils/posts'
+import { allPosts, filterByDateRange, DEFAULT_SECTION, ALL_SECTIONS } from '@/utils/posts'
 import CategoryTabs from '@/components/CategoryTabs.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 import FishSwarm from '@/components/FishSwarm.vue'
@@ -120,19 +120,25 @@ const listRef = ref<InstanceType<typeof TransitionGroup>>()
 const footerRef = ref<HTMLElement>()
 
 /* ---- 版块（来自导航栏 /?section=）---- */
-const activeSection = ref<string>('')
+// 默认展示 DEFAULT_SECTION；?section=all 才展示全部
+const activeSection = ref<string>(DEFAULT_SECTION)
 
 watch(
   () => route.query.section as string | undefined,
-  (s) => { activeSection.value = s ?? '' },
+  (s) => { activeSection.value = s ?? DEFAULT_SECTION },
   { immediate: true },
 )
 
 /* 当前版块下的文章 */
 const sectionPosts = computed(() => {
-  if (!activeSection.value) return allPosts
+  if (activeSection.value === ALL_SECTIONS) return allPosts
   return allPosts.filter((p) => p.section === activeSection.value)
 })
+
+/* 标题区展示文案（all → 所有） */
+const sectionLabel = computed(() =>
+  activeSection.value === ALL_SECTIONS ? '所有' : activeSection.value,
+)
 
 /* ---- 子分类标签（来自 frontmatter category）---- */
 const activeCategory = ref<string>('全部')
@@ -178,7 +184,10 @@ const filteredPosts = computed(() => {
 function onCategorySelect(cat: string) {
   activeCategory.value = cat
   const q: Record<string, string> = {}
-  if (activeSection.value) q.section = activeSection.value
+  // 默认版块不写进 URL，保持地址栏干净
+  if (activeSection.value && activeSection.value !== DEFAULT_SECTION) {
+    q.section = activeSection.value
+  }
   if (cat !== '全部') q.cat = cat
   router.replace({ query: q })
 }

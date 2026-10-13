@@ -49,7 +49,7 @@ const titleRef = ref<HTMLElement>()
 const showCover = computed(() => !!props.post.cover && !coverBroken.value)
 
 function goPost() {
-  router.push(`/post/${props.post.slug}`)
+  router.push(`/blog/${props.post.slug}`)
 }
 
 let hoverTween: gsap.core.Tween | null = null

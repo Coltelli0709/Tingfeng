@@ -11,7 +11,7 @@ const router = createRouter({
       meta: { title: '听风 · Coltelli的一隅自留地' },
     },
     {
-      path: '/post/:slug',
+      path: '/blog/:slug',
       name: 'Post',
       component: () => import('@/views/Post.vue'),
       meta: { title: '听风 · 文章' },

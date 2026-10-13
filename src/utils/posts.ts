@@ -1,10 +1,10 @@
 /**
  * posts.ts — 博客文章数据层
  *
- * 数据源：code/post/{版块}/{文章名}.md
+ * 数据源：code/blog/{版块}/{文章名}.md
  *
  * 两层分类体系：
- *   section  → post/ 下的文件夹名（导航栏版块）
+ *   section  → blog/ 下的文件夹名（导航栏版块）
  *   category → md 内 frontmatter 的 category（子分类标签）
  */
 
@@ -22,6 +22,11 @@ export interface PostMeta {
 export interface PostWithContent extends PostMeta {
   content: string
 }
+
+/** 首页默认展示的版块（URL 无 ?section= 时生效） */
+export const DEFAULT_SECTION = 'DIARY-new'
+/** “所有版块”在 URL query 中的哨兵值 */
+export const ALL_SECTIONS = 'all'
 
 /* ===== Frontmatter 解析 ===== */
 
@@ -69,7 +74,7 @@ function parsePath(path: string): { section: string; slug: string } {
 /* ===== 全局文章索引 ===== */
 
 const rawModules: Record<string, string> = import.meta.glob(
-  '/post/**/*.md',
+  '/blog/**/*.md',
   { eager: true, query: '?raw', import: 'default' },
 ) as Record<string, string>
 
@@ -92,7 +97,7 @@ export const allPosts: PostWithContent[] = Object.entries(rawModules)
   })
   .sort((a, b) => b.date.localeCompare(a.date))
 
-/** 所有版块（post/ 下的文件夹名），用于导航栏 */
+/** 所有版块（blog/ 下的文件夹名），用于导航栏 */
 export const allSections: string[] = (() => {
   const set = new Set<string>()
   for (const p of allPosts) {

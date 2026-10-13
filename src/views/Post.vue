@@ -1,6 +1,6 @@
 <template>
   <div class="post-page">
-    <div class="container">
+    <div class="container post-page__container">
       <!-- 加载状态 -->
       <div v-if="loading" class="post-page__loading">
         <div class="post-page__spinner" />
@@ -16,7 +16,8 @@
 
       <!-- 文章正文 -->
       <template v-else>
-        <article ref="articleRef" class="post-article">
+        <div class="post-layout">
+          <article ref="articleRef" class="post-article">
           <!-- 标题区 -->
           <header ref="headerRef" class="post-article__header">
             <div class="post-article__meta">
@@ -46,7 +47,7 @@
 
           <!-- Markdown 正文 -->
           <section ref="bodyRef" class="post-article__body">
-            <MarkdownRenderer :content="post.content" />
+            <MarkdownRenderer :content="post.content" @headings="onHeadings" />
           </section>
 
           <!-- 底部导航 -->
@@ -56,20 +57,27 @@
             </router-link>
             <router-link
               v-if="prevPost"
-              :to="`/post/${prevPost.slug}`"
+              :to="`/blog/${prevPost.slug}`"
               class="post-article__adjacent"
             >
               ← {{ prevPost.title }}
             </router-link>
             <router-link
               v-if="nextPost"
-              :to="`/post/${nextPost.slug}`"
+              :to="`/blog/${nextPost.slug}`"
               class="post-article__adjacent post-article__adjacent--next"
             >
               {{ nextPost.title }} →
             </router-link>
           </footer>
-        </article>
+          </article>
+
+          <ArticleToc
+            v-if="headings.length"
+            class="post-layout__toc"
+            :headings="headings"
+          />
+        </div>
       </template>
     </div>
   </div>
@@ -80,13 +88,20 @@ import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import gsap from 'gsap'
 import { allPosts, getPostBySlug } from '@/utils/posts'
+import type { TocHeading } from '@/utils/toc'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import ArticleToc from '@/components/ArticleToc.vue'
 
 const route = useRoute()
 
 const loading = ref(true)
 const post = ref<(typeof allPosts)[number] | null>(null)
 const postCoverBroken = ref(false)
+const headings = ref<TocHeading[]>([])
+
+function onHeadings(items: TocHeading[]) {
+  headings.value = items
+}
 
 const articleRef = ref<HTMLElement>()
 const headerRef = ref<HTMLElement>()
@@ -218,6 +233,40 @@ function animateIn() {
 .post-article {
   max-width: var(--max-width);
   margin: 0 auto;
+}
+
+/* 文章 + 右侧目录 布局 */
+.post-page__container {
+  max-width: 1160px;
+}
+
+.post-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 48px;
+}
+
+.post-layout > .post-article {
+  flex: 0 1 800px;
+  min-width: 0;
+  margin: 0;
+}
+
+.post-layout__toc {
+  flex: 0 0 200px;
+}
+
+@media (max-width: 1023px) {
+  .post-layout {
+    display: block;
+  }
+  .post-layout__toc {
+    display: none;
+  }
+  .post-layout > .post-article {
+    margin: 0 auto;
+  }
 }
 
 /* 标题区 */
