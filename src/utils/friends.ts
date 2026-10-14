@@ -58,10 +58,27 @@ function parseFriends(raw: string): Friend[] {
     const key = kv[1].toLowerCase()
     const val = kv[2].replace(/^['"]|['"]$/g, '').trim()
 
-    if (key === 'url' || key === 'link' || key === 'href') cur.url = val
-    else if (key === 'avatar' || key === 'img' || key === 'image' || key === 'icon') cur.avatar = val
+    if (key === 'url' || key === 'link' || key === 'href') cur.url = normalizeUrl(val)
+    else if (key === 'avatar' || key === 'img' || key === 'image' || key === 'icon') cur.avatar = normalizeAvatar(val)
     else if (key === 'desc' || key === 'description' || key === 'intro') cur.desc = val
   }
 
   return list.filter((f) => f.name && f.url)
+}
+
+/** 补全协议：没写 http(s):// 时自动加 https://，否则浏览器会当成站内相对路径 */
+function normalizeUrl(raw: string): string {
+  const u = raw.trim()
+  if (!u) return ''
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return u // 已有协议（http: / https: / mailto: …）
+  if (u.startsWith('//')) return `https:${u}` // 协议相对
+  return `https://${u}`
+}
+
+/** 头像：站内相对路径（/images/…）与 data: 保持原样，其余按 URL 补协议 */
+function normalizeAvatar(raw: string): string {
+  const u = raw.trim()
+  if (!u) return ''
+  if (u.startsWith('/') || u.startsWith('./') || u.startsWith('../') || u.startsWith('data:')) return u
+  return normalizeUrl(u)
 }
