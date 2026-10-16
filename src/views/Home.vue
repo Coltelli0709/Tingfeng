@@ -192,12 +192,20 @@ function onCategorySelect(cat: string) {
   router.replace({ query: q })
 }
 
+// 归一化输入：全角数字转半角，非数字一律剔除，最多保留 6 位
+function toYymmdd(v: string): string {
+  return v
+    .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/\D/g, '')
+    .slice(0, 6)
+}
+
 watch(dateStart, (v) => {
-  const cleaned = v.replace(/\D/g, '').slice(0, 6)
+  const cleaned = toYymmdd(v)
   if (v !== cleaned) dateStart.value = cleaned
 })
 watch(dateEnd, (v) => {
-  const cleaned = v.replace(/\D/g, '').slice(0, 6)
+  const cleaned = toYymmdd(v)
   if (v !== cleaned) dateEnd.value = cleaned
 })
 

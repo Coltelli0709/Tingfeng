@@ -1,5 +1,5 @@
 <template>
-  <div class="side-rail" :class="{ 'side-rail--open': showFriends }">
+  <div class="side-rail" :class="{ 'side-rail--open': showFriends || showAbout }">
     <!-- 功能栏 -->
     <nav class="side-rail__bar" aria-label="快捷功能">
       <button
@@ -24,6 +24,30 @@
           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
         </svg>
         <span class="side-rail__label">友链</span>
+      </button>
+
+      <button
+        type="button"
+        class="side-rail__btn"
+        :class="{ 'side-rail__btn--active': showAbout }"
+        :aria-expanded="showAbout"
+        title="关于"
+        @click="toggleAbout"
+      >
+        <svg
+          class="side-rail__icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+        </svg>
+        <span class="side-rail__label">关于</span>
       </button>
 
       <button
@@ -105,18 +129,72 @@
         </ul>
       </section>
     </transition>
+
+    <!-- 关于我 / About me 面板 -->
+    <transition name="friends-pop">
+      <section v-if="showAbout" class="about-panel" aria-label="关于我">
+        <header class="friends-panel__head">
+          <h2 class="friends-panel__title">About me</h2>
+          <button
+            type="button"
+            class="friends-panel__close"
+            title="关闭"
+            @click="showAbout = false"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+
+        <p v-if="about.bio" class="about-panel__bio">{{ about.bio }}</p>
+
+        <ul class="about-panel__list">
+          <li v-if="about.githubUrl" class="about-item">
+            <span class="about-item__label">GitHub</span>
+            <a
+              class="about-item__value"
+              :href="about.githubUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >{{ about.github }}</a>
+          </li>
+          <li v-if="about.email" class="about-item">
+            <span class="about-item__label">Email</span>
+            <a class="about-item__value" :href="`mailto:${about.email}`">
+              {{ about.email }}
+            </a>
+          </li>
+        </ul>
+      </section>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { friends } from '@/utils/friends'
+import { about } from '@/utils/about'
 
 const showFriends = ref(false)
+const showAbout = ref(false)
 const broken = ref<string[]>([])
 
 function toggleFriends() {
   showFriends.value = !showFriends.value
+  if (showFriends.value) showAbout.value = false
+}
+
+function toggleAbout() {
+  showAbout.value = !showAbout.value
+  if (showAbout.value) showFriends.value = false
 }
 
 function toTop() {
@@ -139,12 +217,18 @@ function hostOf(url: string) {
 }
 
 function onDocClick(e: MouseEvent) {
-  if (!showFriends.value) return
+  if (!showFriends.value && !showAbout.value) return
   const el = e.target as HTMLElement | null
-  if (!el?.closest('.side-rail')) showFriends.value = false
+  if (!el?.closest('.side-rail')) {
+    showFriends.value = false
+    showAbout.value = false
+  }
 }
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape') showFriends.value = false
+  if (e.key === 'Escape') {
+    showFriends.value = false
+    showAbout.value = false
+  }
 }
 
 onMounted(() => {
@@ -359,6 +443,71 @@ onUnmounted(() => {
   color: var(--blue-500);
 }
 
+/* ===== 关于我面板 ===== */
+.about-panel {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  width: 300px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 40px rgba(30, 58, 95, 0.14);
+}
+
+.about-panel__bio {
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--gray-500);
+}
+
+.about-panel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+}
+
+.about-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.about-item__label {
+  flex: 0 0 auto;
+  min-width: 52px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.about-item__value {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.88rem;
+  color: var(--blue-700);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.about-item__value:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
 /* 过渡 */
 .friends-pop-enter-active,
 .friends-pop-leave-active {
@@ -382,7 +531,8 @@ onUnmounted(() => {
     flex-direction: row;
   }
 
-  .friends-panel {
+  .friends-panel,
+  .about-panel {
     left: 50%;
     top: auto;
     bottom: calc(100% + 10px);

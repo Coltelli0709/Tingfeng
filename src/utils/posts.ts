@@ -141,8 +141,10 @@ export function filterByDateRange(
 ): PostWithContent[] {
   const s = yymmddToIso(start)
   const e = yymmddToIso(end)
-  if (!s || !e) return posts
-  return posts.filter((p) => p.date >= s && p.date <= e)
+  // 两端都为空 → 不筛选
+  if (!s && !e) return posts
+  // 单边也生效：只填「从」按起点，只填「到」按终点
+  return posts.filter((p) => (!s || p.date >= s) && (!e || p.date <= e))
 }
 
 function yymmddToIso(yymmdd: string): string | null {
