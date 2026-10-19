@@ -25,7 +25,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import gsap from 'gsap'
-import { allSections, DEFAULT_SECTION, ALL_SECTIONS } from '@/utils/posts'
+import { allSections, ALL_SECTIONS } from '@/utils/posts'
 
 const allLink = '所有'
 
@@ -37,8 +37,10 @@ const route = useRoute()
 
 function isActive(cat: string): boolean {
   const s = route.query.section as string | undefined
+  // 无 section 参数时首页是卡片总览，导航不选中任何版块
+  if (!s) return false
   if (cat === allLink) return s === ALL_SECTIONS
-  return (s ?? DEFAULT_SECTION) === cat
+  return s === cat
 }
 
 const headerRef = ref<HTMLElement>()
@@ -86,11 +88,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   height: 100%;
 }
 
 .site-header__logo {
   display: flex;
+  flex: 0 0 auto;
   align-items: baseline;
   gap: 6px;
   text-decoration: none;
@@ -116,19 +120,39 @@ onMounted(() => {
 
 .site-header__nav {
   display: flex;
-  gap: 8px;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-header__nav::-webkit-scrollbar {
+  display: none;
 }
 
 .site-header__link {
-  padding: 6px 14px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   color: var(--gray-600);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .site-header__link:hover {
   color: var(--blue-700);
   background: var(--blue-50);
+}
+
+.site-header__link--active {
+  color: var(--blue-700);
+  background: var(--blue-50);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .site-header__tagline {
+    display: none;
+  }
 }
 </style>

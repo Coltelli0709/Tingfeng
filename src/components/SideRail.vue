@@ -2,6 +2,30 @@
   <div class="side-rail" :class="{ 'side-rail--open': showFriends || showAbout }">
     <!-- 功能栏 -->
     <nav class="side-rail__bar" aria-label="快捷功能">
+      <RouterLink
+        to="/"
+        class="side-rail__btn"
+        :class="{ 'side-rail__btn--active': isHome }"
+        title="总览"
+      >
+        <svg
+          class="side-rail__icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+        <span class="side-rail__label">总览</span>
+      </RouterLink>
+
       <button
         type="button"
         class="side-rail__btn"
@@ -179,13 +203,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { friends } from '@/utils/friends'
 import { about } from '@/utils/about'
+
+const route = useRoute()
+
+/* 无 section 参数时首页是卡片总览，「总览」高亮 */
+const isHome = computed(
+  () => route.path === '/' && !route.query.section,
+)
 
 const showFriends = ref(false)
 const showAbout = ref(false)
 const broken = ref<string[]>([])
+
+// 路由变化时收起面板
+watch(
+  () => route.fullPath,
+  () => {
+    showFriends.value = false
+    showAbout.value = false
+  },
+)
 
 function toggleFriends() {
   showFriends.value = !showFriends.value
@@ -244,7 +285,7 @@ onUnmounted(() => {
 <style scoped>
 .side-rail {
   position: fixed;
-  left: 20px;
+  left: 24px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 200;
@@ -253,35 +294,40 @@ onUnmounted(() => {
 .side-rail__bar {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  width: 136px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  box-shadow: 0 4px 20px rgba(30, 58, 95, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(30, 58, 95, 0.1);
 }
 
 .side-rail__btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 3px;
-  width: 48px;
-  padding: 8px 4px;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
   font-family: var(--font-sans);
+  font-size: 0.82rem;
   color: var(--gray-500);
   background: transparent;
   border: none;
-  border-radius: 999px;
+  border-radius: 8px;
+  text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s, background 0.2s;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
 }
 
 .side-rail__btn:hover {
   color: var(--blue-700);
   background: var(--blue-50);
+  transform: translateX(2px);
 }
 
 .side-rail__btn--active {
@@ -292,17 +338,20 @@ onUnmounted(() => {
 .side-rail__btn--active:hover {
   color: var(--white);
   background: var(--accent-hover);
+  transform: none;
 }
 
 .side-rail__icon {
-  width: 20px;
-  height: 20px;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
 }
 
 .side-rail__label {
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   line-height: 1;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 /* ===== 友链面板 ===== */
@@ -528,7 +577,23 @@ onUnmounted(() => {
   }
 
   .side-rail__bar {
+    width: auto;
     flex-direction: row;
+  }
+
+  .side-rail__btn {
+    width: auto;
+    flex-direction: column;
+    gap: 3px;
+    padding: 7px 10px;
+  }
+
+  .side-rail__btn:hover {
+    transform: none;
+  }
+
+  .side-rail__label {
+    font-size: 0.66rem;
   }
 
   .friends-panel,

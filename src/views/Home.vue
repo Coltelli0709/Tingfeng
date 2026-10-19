@@ -3,90 +3,115 @@
     <!-- 鱼群背景 -->
     <FishSwarm />
 
-    <div ref="pageRef" class="container home__content">
-      <!-- 页面标题 -->
-      <div ref="heroRef" class="home__hero">
-        <h1 class="home__title">文章</h1>
-        <p class="home__subtitle">
-          共 {{ filteredPosts.length }} 篇
-          <template v-if="sectionLabel"> · {{ sectionLabel }}</template>
-          <template v-if="activeCategory !== '全部'">
-            / {{ activeCategory }}
-          </template>
-        </p>
-      </div>
-
-      <!-- 分类筛选 -->
-      <div ref="tabsRef" class="home__tabs-wrap">
-        <CategoryTabs
-          :categories="categoriesWithinSection"
-          :active="activeCategory"
-          :count-map="countMap"
-          @select="onCategorySelect"
-        />
-      </div>
-
-      <!-- 时间筛选 -->
-      <div ref="dateFilterRef" class="home__date-filter">
-        <button class="home__date-toggle" @click="showDateFilter = !showDateFilter">
-          {{ showDateFilter ? '收起时间' : '时间筛选' }}
-        </button>
-
-        <div v-if="showDateFilter" class="home__date-panel">
-          <div class="home__date-row">
-            <label class="home__date-label">
-              <span>从</span>
-              <input
-                v-model="dateStart"
-                class="home__date-input"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="YYMMDD"
-              />
-            </label>
-            <span class="home__date-sep">—</span>
-            <label class="home__date-label">
-              <span>到</span>
-              <input
-                v-model="dateEnd"
-                class="home__date-input"
-                type="text"
-                inputmode="numeric"
-                maxlength="6"
-                placeholder="YYMMDD"
-              />
-            </label>
-            <button
-              v-if="dateStart || dateEnd"
-              class="home__date-clear"
-              @click="clearDate"
-            >
-              清除
-            </button>
-          </div>
-          <p class="home__date-hint">时间格式为 yymmdd，例如：070407</p>
+    <div
+      class="container home__content"
+      :class="{ 'home__content--wide': viewMode === 'folders' }"
+    >
+      <!-- ================= 总览：一个 blog 文件夹一张卡片 ================= -->
+      <template v-if="viewMode === 'folders'">
+        <div ref="heroRef" class="home__hero">
+          <h1 class="home__title">文章</h1>
+          <p class="home__subtitle">
+            {{ allSectionMeta.length }} 个分类 · 共 {{ allPosts.length }} 篇
+            <span class="home__subtitle-note">按最后更新排序</span>
+          </p>
         </div>
-      </div>
 
-      <!-- 文章列表 -->
-      <TransitionGroup
-        name="post-list"
-        tag="div"
-        ref="listRef"
-        class="home__list"
-      >
-        <ArticleCard
-          v-for="post in filteredPosts"
-          :key="post.slug"
-          :post="post"
-        />
-      </TransitionGroup>
+        <div ref="foldersRef" class="folder-grid">
+          <FolderCard
+            v-for="(section, i) in allSectionMeta"
+            :key="section.name"
+            :section="section"
+            :index="i"
+          />
+        </div>
+      </template>
 
-      <!-- 空状态 -->
-      <div v-if="filteredPosts.length === 0" class="home__empty">
-        <p>暂无文章</p>
-      </div>
+      <!-- ================= 某个文件夹下的文章列表 ================= -->
+      <template v-else>
+        <div ref="heroRef" class="home__hero">
+          <RouterLink to="/" class="home__back">← 全部分类</RouterLink>
+          <h1 class="home__title">{{ sectionLabel }}</h1>
+          <p class="home__subtitle">
+            共 {{ filteredPosts.length }} 篇
+            <template v-if="activeCategory !== '全部'">
+              / {{ activeCategory }}
+            </template>
+          </p>
+        </div>
+
+        <!-- 分类筛选 -->
+        <div ref="tabsRef" class="home__tabs-wrap">
+          <CategoryTabs
+            :categories="categoriesWithinSection"
+            :active="activeCategory"
+            :count-map="countMap"
+            @select="onCategorySelect"
+          />
+        </div>
+
+        <!-- 时间筛选 -->
+        <div ref="dateFilterRef" class="home__date-filter">
+          <button class="home__date-toggle" @click="showDateFilter = !showDateFilter">
+            {{ showDateFilter ? '收起时间' : '时间筛选' }}
+          </button>
+
+          <div v-if="showDateFilter" class="home__date-panel">
+            <div class="home__date-row">
+              <label class="home__date-label">
+                <span>从</span>
+                <input
+                  v-model="dateStart"
+                  class="home__date-input"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="6"
+                  placeholder="YYMMDD"
+                />
+              </label>
+              <span class="home__date-sep">—</span>
+              <label class="home__date-label">
+                <span>到</span>
+                <input
+                  v-model="dateEnd"
+                  class="home__date-input"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="6"
+                  placeholder="YYMMDD"
+                />
+              </label>
+              <button
+                v-if="dateStart || dateEnd"
+                class="home__date-clear"
+                @click="clearDate"
+              >
+                清除
+              </button>
+            </div>
+            <p class="home__date-hint">时间格式为 yymmdd，例如：070407</p>
+          </div>
+        </div>
+
+        <!-- 文章列表 -->
+        <TransitionGroup
+          name="post-list"
+          tag="div"
+          ref="listRef"
+          class="home__list"
+        >
+          <ArticleCard
+            v-for="post in filteredPosts"
+            :key="post.slug"
+            :post="post"
+          />
+        </TransitionGroup>
+
+        <!-- 空状态 -->
+        <div v-if="filteredPosts.length === 0" class="home__empty">
+          <p>暂无文章</p>
+        </div>
+      </template>
 
       <!-- 访客统计 -->
       <footer ref="footerRef" class="home__footer">
@@ -101,31 +126,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import {
+  ref,
+  computed,
+  onMounted,
+  onUnmounted,
+  nextTick,
+  watch,
+  TransitionGroup,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
-import { allPosts, filterByDateRange, DEFAULT_SECTION, ALL_SECTIONS } from '@/utils/posts'
+import {
+  allPosts,
+  allSectionMeta,
+  filterByDateRange,
+  DEFAULT_SECTION,
+  ALL_SECTIONS,
+} from '@/utils/posts'
 import CategoryTabs from '@/components/CategoryTabs.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
+import FolderCard from '@/components/FolderCard.vue'
 import FishSwarm from '@/components/FishSwarm.vue'
 
 const route = useRoute()
 const router = useRouter()
 
-const pageRef = ref<HTMLElement>()
 const heroRef = ref<HTMLElement>()
 const tabsRef = ref<HTMLElement>()
 const dateFilterRef = ref<HTMLElement>()
 const listRef = ref<InstanceType<typeof TransitionGroup>>()
+const foldersRef = ref<HTMLElement>()
 const footerRef = ref<HTMLElement>()
 
+/* ---- 视图模式：无 section 参数 → 文件夹卡片总览；有 → 文章列表 ---- */
+const sectionQuery = computed(() => {
+  const raw = route.query.section
+  return Array.isArray(raw) ? raw[0] : raw
+})
+
+const viewMode = computed<'folders' | 'list'>(() =>
+  sectionQuery.value ? 'list' : 'folders',
+)
+
 /* ---- 版块（来自导航栏 /?section=）---- */
-// 默认展示 DEFAULT_SECTION；?section=all 才展示全部
 const activeSection = ref<string>(DEFAULT_SECTION)
 
 watch(
-  () => route.query.section as string | undefined,
-  (s) => { activeSection.value = s ?? DEFAULT_SECTION },
+  sectionQuery,
+  (s) => { activeSection.value = s || DEFAULT_SECTION },
   { immediate: true },
 )
 
@@ -183,11 +232,8 @@ const filteredPosts = computed(() => {
 
 function onCategorySelect(cat: string) {
   activeCategory.value = cat
-  const q: Record<string, string> = {}
-  // 默认版块不写进 URL，保持地址栏干净
-  if (activeSection.value && activeSection.value !== DEFAULT_SECTION) {
-    q.section = activeSection.value
-  }
+  // 列表模式下 section 必须始终保留在 URL 中，否则会跳回卡片总览
+  const q: Record<string, string> = { section: activeSection.value }
   if (cat !== '全部') q.cat = cat
   router.replace({ query: q })
 }
@@ -214,50 +260,68 @@ function clearDate() {
   dateEnd.value = ''
 }
 
+/* ---- 入场动画 ---- */
+let entrance: gsap.core.Timeline | null = null
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function animateIn() {
+  entrance?.kill()
+  entrance = null
+
+  const hero = heroRef.value
+  if (!hero) return
+
+  const tabs = tabsRef.value
+  const dateFilter = dateFilterRef.value
+  const footer = footerRef.value
+  const items: HTMLElement[] = foldersRef.value
+    ? (Array.from(foldersRef.value.children) as HTMLElement[])
+    : listRef.value?.$el
+      ? (Array.from(listRef.value.$el.children) as HTMLElement[])
+      : []
+
+  if (prefersReducedMotion()) {
+    gsap.set(
+      [hero, tabs, dateFilter, footer, ...items].filter(Boolean),
+      { autoAlpha: 1, y: 0 },
+    )
+    return
+  }
+
+  const dist = 22
+
+  gsap.set(hero, { y: dist, autoAlpha: 0 })
+  if (tabs) gsap.set(tabs, { y: dist * 0.6, autoAlpha: 0 })
+  if (dateFilter) gsap.set(dateFilter, { y: dist * 0.5, autoAlpha: 0 })
+  if (footer) gsap.set(footer, { autoAlpha: 0 })
+  if (items.length) gsap.set(items, { y: dist, autoAlpha: 0 })
+
+  const tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.55 } })
+  tl.to(hero, { y: 0, autoAlpha: 1 })
+  if (tabs) tl.to(tabs, { y: 0, autoAlpha: 1 }, '-=0.35')
+  if (dateFilter) tl.to(dateFilter, { y: 0, autoAlpha: 1 }, '-=0.3')
+  if (items.length) tl.to(items, { y: 0, autoAlpha: 1, stagger: 0.07 }, '-=0.28')
+  if (footer) tl.to(footer, { autoAlpha: 1 }, '-=0.12')
+
+  entrance = tl
+}
+
 onMounted(async () => {
   await nextTick()
+  animateIn()
+})
 
-  const mm = gsap.matchMedia()
+// 卡片总览 ↔ 文章列表、以及版块之间切换时重新播放
+watch([viewMode, sectionQuery], async () => {
+  await nextTick()
+  animateIn()
+})
 
-  // 桌面端：更大位移；移动端：更温和
-  mm.add(
-    {
-      isDesktop: '(min-width: 768px)',
-      isMobile: '(max-width: 767px)',
-      reduceMotion: '(prefers-reduced-motion: reduce)',
-    },
-    (ctx) => {
-      const { isDesktop, reduceMotion } = ctx.conditions!
-
-      if (reduceMotion) {
-        // 仅淡入，无位移
-        gsap.set([heroRef.value, tabsRef.value, dateFilterRef.value, footerRef.value], { autoAlpha: 1 })
-        gsap.set(listRef.value?.$el?.children ?? [], { autoAlpha: 1 })
-        return
-      }
-
-      const dist = isDesktop ? 24 : 14
-      const staggerTime = isDesktop ? 0.08 : 0.06
-      const children = listRef.value?.$el ? gsap.utils.toArray(listRef.value.$el.children) : []
-
-      // 先设初始态
-      gsap.set(heroRef.value, { y: dist, autoAlpha: 0 })
-      gsap.set(tabsRef.value, { y: dist * 0.6, autoAlpha: 0 })
-      gsap.set(dateFilterRef.value, { y: dist * 0.5, autoAlpha: 0 })
-      gsap.set(children, { y: dist, autoAlpha: 0 })
-      gsap.set(footerRef.value, { autoAlpha: 0 })
-
-      // 依次入场
-      const tl = gsap.timeline({ defaults: { ease: 'power2.out', duration: 0.55 } })
-      tl.to(heroRef.value, { y: 0, autoAlpha: 1 })
-        .to(tabsRef.value, { y: 0, autoAlpha: 1 }, '-=0.35')
-        .to(dateFilterRef.value, { y: 0, autoAlpha: 1 }, '-=0.3')
-        .to(children, { y: 0, autoAlpha: 1, stagger: staggerTime }, '-=0.25')
-        .to(footerRef.value, { autoAlpha: 1 }, '-=0.15')
-
-      return () => tl.kill()
-    },
-  )
+onUnmounted(() => {
+  entrance?.kill()
 })
 </script>
 
@@ -275,6 +339,11 @@ onMounted(async () => {
   z-index: 2;
 }
 
+/* 卡片总览用更宽的容器 */
+.home__content--wide {
+  max-width: 1040px;
+}
+
 .home__hero {
   margin-bottom: 28px;
 }
@@ -290,6 +359,40 @@ onMounted(async () => {
 .home__subtitle {
   font-size: 0.9rem;
   color: var(--gray-500);
+}
+
+.home__subtitle-note {
+  margin-left: 10px;
+  padding-left: 10px;
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  border-left: 1px solid var(--border);
+}
+
+.home__back {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.home__back:hover {
+  color: var(--blue-700);
+}
+
+/* ===== 文件夹卡片网格 ===== */
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+@media (max-width: 760px) {
+  .folder-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 文章列表 */

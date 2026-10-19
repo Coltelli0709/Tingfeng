@@ -11,7 +11,7 @@
       <div v-else-if="!post" class="post-page__error">
         <h2>未找到文章</h2>
         <p>可能已被删除，或链接有误。</p>
-        <router-link to="/" class="post-page__back-link">← 返回首页</router-link>
+        <router-link to="/" class="post-page__back-link">← 返回分类总览</router-link>
       </div>
 
       <!-- 文章正文 -->
@@ -52,8 +52,11 @@
 
           <!-- 底部导航 -->
           <footer ref="footerRef" class="post-article__footer">
-            <router-link to="/" class="post-article__back-link">
-              ← 返回文章列表
+            <router-link
+              :to="{ path: '/', query: { section: post.section } }"
+              class="post-article__back-link"
+            >
+              ← 返回 {{ post.section }}
             </router-link>
             <router-link
               v-if="prevPost"

@@ -23,6 +23,18 @@ export interface PostWithContent extends PostMeta {
   content: string
 }
 
+/** 首页分类卡片用：一个 blog/ 文件夹 = 一个版块 */
+export interface SectionMeta {
+  name: string
+  postCount: number
+  /** 该文件夹内最新一篇文章的日期（yyyy-mm-dd），卡片按此降序 */
+  updatedAt: string
+  latestTitle: string
+  /** 文件夹根目录的 cover.jpg / cover.png / … 自动映射 */
+  cover?: string
+  categories: string[]
+}
+
 /** 首页默认展示的版块（URL 无 ?section= 时生效） */
 export const DEFAULT_SECTION = 'DIARY-new'
 /** “所有版块”在 URL query 中的哨兵值 */
@@ -97,14 +109,68 @@ export const allPosts: PostWithContent[] = Object.entries(rawModules)
   })
   .sort((a, b) => b.date.localeCompare(a.date))
 
-/** 所有版块（blog/ 下的文件夹名），用于导航栏 */
-export const allSections: string[] = (() => {
-  const set = new Set<string>()
-  for (const p of allPosts) {
-    if (p.section) set.add(p.section)
+/* ===== 文件夹封面 =====
+ * 约定：cover.jpg 放在 blog/{版块}/ 根目录，自动成为该版块卡片封面。
+ * 同时兼容 cover.jpeg / cover.png / cover.webp。
+ */
+const coverModules = import.meta.glob(
+  [
+    '/blog/*/cover.jpg',
+    '/blog/*/cover.jpeg',
+    '/blog/*/cover.png',
+    '/blog/*/cover.webp',
+  ],
+  { eager: true, query: '?url', import: 'default' },
+) as Record<string, string>
+
+const folderCovers: Record<string, string> = {}
+for (const [path, url] of Object.entries(coverModules)) {
+  // /blog/DIARY-new/cover.jpg → DIARY-new
+  const folder = path.split('/')[2]
+  if (folder) folderCovers[folder] = url
+}
+
+/** 首页分类卡片：按文件夹归组，按最后更新（最新文章日期）降序 */
+export const allSectionMeta: SectionMeta[] = (() => {
+  const grouped = new Map<string, PostWithContent[]>()
+
+  for (const post of allPosts) {
+    if (!post.section) continue
+    const list = grouped.get(post.section)
+    if (list) list.push(post)
+    else grouped.set(post.section, [post])
   }
-  return Array.from(set)
+
+  return Array.from(grouped, ([name, posts]) => {
+    // allPosts 已按日期降序，posts[0] 即最新一篇
+    const latest = posts[0]
+    const categories: string[] = []
+    for (const p of posts) {
+      // category 未填写时会回退为版块名，这种重复标签不展示在卡片上
+      if (
+        p.category &&
+        p.category !== name &&
+        !categories.includes(p.category)
+      ) {
+        categories.push(p.category)
+      }
+    }
+    return {
+      name,
+      postCount: posts.length,
+      updatedAt: latest.date,
+      latestTitle: latest.title,
+      cover: folderCovers[name],
+      categories,
+    }
+  }).sort(
+    (a, b) =>
+      b.updatedAt.localeCompare(a.updatedAt) || a.name.localeCompare(b.name),
+  )
 })()
+
+/** 所有版块（blog/ 下的文件夹名），用于导航栏 */
+export const allSections: string[] = allSectionMeta.map((s) => s.name)
 
 /** 所有子分类（frontmatter 的 category），用于标签筛选 */
 export const allCategories: string[] = (() => {
