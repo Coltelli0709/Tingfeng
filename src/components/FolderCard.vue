@@ -8,11 +8,8 @@
       @pointermove="onMove"
       @pointerleave="onLeave"
     >
-      <!-- 鼠标跟随光晕 -->
-      <span ref="glowRef" class="folder-card__glow" aria-hidden="true" />
-
-      <!-- 文件夹根目录 cover.jpg 自动渲染为封面 -->
-      <div v-if="hasCover" class="folder-card__cover">
+      <!-- 文件夹根目录 cover.jpg 自动渲染为封面，比例 4:3 -->
+      <div v-if="hasCover" ref="coverRef" class="folder-card__cover">
         <img
           ref="coverImgRef"
           :src="section.cover"
@@ -22,7 +19,9 @@
         />
       </div>
 
-      <div class="folder-card__body">
+      <div ref="panelRef" class="folder-card__body">
+        <!-- 鼠标跟随光晕 -->
+        <span ref="glowRef" class="folder-card__glow" aria-hidden="true" />
         <!-- 无封面时的大号首字母 / 装饰字 -->
         <span
           v-if="!hasCover"
@@ -43,7 +42,9 @@
           >/ {{ nameParts.suffix }}</span>
         </h2>
 
-        <p class="folder-card__latest">{{ section.latestTitle }}</p>
+        <p class="folder-card__latest">
+          <span class="folder-card__latest-label">最新文章：</span>{{ section.latestTitle }}
+        </p>
 
         <div v-if="section.categories.length" class="folder-card__tags">
           <span
@@ -75,7 +76,9 @@ const props = defineProps<{
 }>()
 
 const cardRef = ref<HTMLElement>()
+const coverRef = ref<HTMLElement>()
 const coverImgRef = ref<HTMLImageElement>()
+const panelRef = ref<HTMLElement>()
 const glowRef = ref<HTMLElement>()
 const arrowRef = ref<HTMLElement>()
 const ghostRef = ref<HTMLElement>()
@@ -139,7 +142,9 @@ onMounted(() => {
 onBeforeUnmount(() => {
   const els = [
     cardRef.value,
+    coverRef.value,
     coverImgRef.value,
+    panelRef.value,
     glowRef.value,
     arrowRef.value,
     ghostRef.value,
@@ -149,8 +154,8 @@ onBeforeUnmount(() => {
 })
 
 function onMove(e: PointerEvent) {
-  if (!glowX || !glowY || !cardRef.value) return
-  const rect = cardRef.value.getBoundingClientRect()
+  if (!glowX || !glowY || !panelRef.value) return
+  const rect = panelRef.value.getBoundingClientRect()
   glowX(e.clientX - rect.left)
   glowY(e.clientY - rect.top)
 }
@@ -159,14 +164,34 @@ function onEnter(e: PointerEvent) {
   if (reducedMotion()) return
   onMove(e)
 
+  // 整张卡片轻微抬升
   gsap.to(cardRef.value, {
     y: -6,
-    borderColor: '#93c5fd',
-    boxShadow: '0 20px 44px -14px rgba(37, 99, 235, 0.32)',
     duration: 0.35,
     ease: 'power2.out',
     overwrite: 'auto',
   })
+
+  // 下方白框的描边与投影
+  if (panelRef.value) {
+    gsap.to(panelRef.value, {
+      borderColor: '#93c5fd',
+      boxShadow: '0 18px 40px -18px rgba(37, 99, 235, 0.42)',
+      duration: 0.35,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    })
+  }
+
+  // 封面投影加深
+  if (coverRef.value) {
+    gsap.to(coverRef.value, {
+      boxShadow: '0 18px 36px -16px rgba(30, 58, 95, 0.5)',
+      duration: 0.35,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    })
+  }
 
   if (coverImgRef.value) {
     gsap.to(coverImgRef.value, {
@@ -213,12 +238,29 @@ function onLeave() {
 
   gsap.to(cardRef.value, {
     y: 0,
-    borderColor: '#e2e8f0',
-    boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
     duration: 0.45,
     ease: 'power2.out',
     overwrite: 'auto',
   })
+
+  if (panelRef.value) {
+    gsap.to(panelRef.value, {
+      borderColor: '#e2e8f0',
+      boxShadow: '0 8px 26px -18px rgba(30, 58, 95, 0.18)',
+      duration: 0.45,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    })
+  }
+
+  if (coverRef.value) {
+    gsap.to(coverRef.value, {
+      boxShadow: '0 12px 28px -18px rgba(30, 58, 95, 0.35)',
+      duration: 0.45,
+      ease: 'power2.out',
+      overwrite: 'auto',
+    })
+  }
 
   if (coverImgRef.value) {
     gsap.to(coverImgRef.value, {
@@ -273,26 +315,28 @@ function onLeave() {
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   height: 100%;
-  overflow: hidden;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  background: transparent;
   cursor: pointer;
   will-change: transform;
 }
 
-.folder-card--text {
+/* 无封面时，白框本身撑起卡片高度 */
+.folder-card--text .folder-card__body {
   min-height: 288px;
 }
 
-/* ===== 封面 ===== */
+/* ===== 封面（宽 4:高 3） ===== */
 .folder-card__cover {
   position: relative;
-  height: 190px;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 28px -18px rgba(30, 58, 95, 0.35);
 }
 
 .folder-card__cover::after {
@@ -319,7 +363,7 @@ function onLeave() {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;
+  z-index: 0;
   width: 320px;
   height: 320px;
   background: radial-gradient(
@@ -341,7 +385,12 @@ function onLeave() {
   flex: 1;
   flex-direction: column;
   gap: 8px;
-  padding: 20px 22px 20px;
+  padding: 20px 22px;
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 26px -18px rgba(30, 58, 95, 0.18);
 }
 
 .folder-card__top {
@@ -393,6 +442,10 @@ function onLeave() {
   color: var(--gray-500);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.folder-card__latest-label {
+  color: var(--gray-400);
 }
 
 .folder-card__tags {
@@ -448,12 +501,12 @@ function onLeave() {
 }
 
 @media (max-width: 640px) {
-  .folder-card__cover {
-    height: 160px;
+  .folder-card {
+    gap: 10px;
   }
 
   .folder-card__body {
-    padding: 18px 18px 18px;
+    padding: 18px;
   }
 
   .folder-card__name {

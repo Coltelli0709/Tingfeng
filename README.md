@@ -105,7 +105,7 @@ npm run build     # 构建产物在 dist/
 blog/DIARY-new/cover.jpg
 ```
 
-构建时会自动扫描并作为卡片封面；没有封面时显示纯文字卡片。也兼容 `cover.jpeg` / `cover.png` / `cover.webp`。
+构建时会自动扫描并作为卡片封面，按 **4:3（宽:高）** 裁切显示在文字白框上方；没有封面时显示纯文字卡片。也兼容 `cover.jpeg` / `cover.png` / `cover.webp`。
 
 ## 文章目录
 
