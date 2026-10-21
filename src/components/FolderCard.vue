@@ -8,8 +8,11 @@
       @pointermove="onMove"
       @pointerleave="onLeave"
     >
+      <!-- 鼠标跟随光晕 -->
+      <span ref="glowRef" class="folder-card__glow" aria-hidden="true" />
+
       <!-- 文件夹根目录 cover.jpg 自动渲染为封面，比例 4:3 -->
-      <div v-if="hasCover" ref="coverRef" class="folder-card__cover">
+      <div v-if="hasCover" class="folder-card__cover">
         <img
           ref="coverImgRef"
           :src="section.cover"
@@ -19,9 +22,7 @@
         />
       </div>
 
-      <div ref="panelRef" class="folder-card__body">
-        <!-- 鼠标跟随光晕 -->
-        <span ref="glowRef" class="folder-card__glow" aria-hidden="true" />
+      <div class="folder-card__body">
         <!-- 无封面时的大号首字母 / 装饰字 -->
         <span
           v-if="!hasCover"
@@ -76,9 +77,7 @@ const props = defineProps<{
 }>()
 
 const cardRef = ref<HTMLElement>()
-const coverRef = ref<HTMLElement>()
 const coverImgRef = ref<HTMLImageElement>()
-const panelRef = ref<HTMLElement>()
 const glowRef = ref<HTMLElement>()
 const arrowRef = ref<HTMLElement>()
 const ghostRef = ref<HTMLElement>()
@@ -142,9 +141,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   const els = [
     cardRef.value,
-    coverRef.value,
     coverImgRef.value,
-    panelRef.value,
     glowRef.value,
     arrowRef.value,
     ghostRef.value,
@@ -154,8 +151,8 @@ onBeforeUnmount(() => {
 })
 
 function onMove(e: PointerEvent) {
-  if (!glowX || !glowY || !panelRef.value) return
-  const rect = panelRef.value.getBoundingClientRect()
+  if (!glowX || !glowY || !cardRef.value) return
+  const rect = cardRef.value.getBoundingClientRect()
   glowX(e.clientX - rect.left)
   glowY(e.clientY - rect.top)
 }
@@ -164,34 +161,15 @@ function onEnter(e: PointerEvent) {
   if (reducedMotion()) return
   onMove(e)
 
-  // 整张卡片轻微抬升
+  // 整张卡片轻微抬升，并加强描边与投影
   gsap.to(cardRef.value, {
-    y: -6,
-    duration: 0.35,
+    y: -5,
+    borderColor: '#93c5fd',
+    boxShadow: '0 16px 32px -16px rgba(37, 99, 235, 0.35)',
+    duration: 0.3,
     ease: 'power2.out',
     overwrite: 'auto',
   })
-
-  // 下方白框的描边与投影
-  if (panelRef.value) {
-    gsap.to(panelRef.value, {
-      borderColor: '#93c5fd',
-      boxShadow: '0 18px 40px -18px rgba(37, 99, 235, 0.42)',
-      duration: 0.35,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    })
-  }
-
-  // 封面投影加深
-  if (coverRef.value) {
-    gsap.to(coverRef.value, {
-      boxShadow: '0 18px 36px -16px rgba(30, 58, 95, 0.5)',
-      duration: 0.35,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    })
-  }
 
   if (coverImgRef.value) {
     gsap.to(coverImgRef.value, {
@@ -238,29 +216,12 @@ function onLeave() {
 
   gsap.to(cardRef.value, {
     y: 0,
-    duration: 0.45,
+    borderColor: '#e2e8f0',
+    boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
+    duration: 0.4,
     ease: 'power2.out',
     overwrite: 'auto',
   })
-
-  if (panelRef.value) {
-    gsap.to(panelRef.value, {
-      borderColor: '#e2e8f0',
-      boxShadow: '0 8px 26px -18px rgba(30, 58, 95, 0.18)',
-      duration: 0.45,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    })
-  }
-
-  if (coverRef.value) {
-    gsap.to(coverRef.value, {
-      boxShadow: '0 12px 28px -18px rgba(30, 58, 95, 0.35)',
-      duration: 0.45,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    })
-  }
 
   if (coverImgRef.value) {
     gsap.to(coverImgRef.value, {
@@ -315,19 +276,22 @@ function onLeave() {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   height: 100%;
-  background: transparent;
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   cursor: pointer;
   will-change: transform;
 }
 
-/* 无封面时，白框本身撑起卡片高度 */
+/* 无封面时，文字区撑起卡片高度 */
 .folder-card--text .folder-card__body {
-  min-height: 288px;
+  min-height: 208px;
 }
 
-/* ===== 封面（宽 4:高 3） ===== */
+/* ===== 封面（宽 4:高 3，与文字同属一张卡） ===== */
 .folder-card__cover {
   position: relative;
   flex: 0 0 auto;
@@ -335,20 +299,6 @@ function onLeave() {
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: var(--gray-100);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 12px 28px -18px rgba(30, 58, 95, 0.35);
-}
-
-.folder-card__cover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(15, 23, 42, 0.32),
-    rgba(15, 23, 42, 0) 58%
-  );
-  pointer-events: none;
 }
 
 .folder-card__cover img {
@@ -363,7 +313,7 @@ function onLeave() {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 0;
+  z-index: 1;
   width: 320px;
   height: 320px;
   background: radial-gradient(
@@ -384,13 +334,9 @@ function onLeave() {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 8px;
-  padding: 20px 22px;
+  gap: 6px;
+  padding: 14px 16px 16px;
   overflow: hidden;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 8px 26px -18px rgba(30, 58, 95, 0.18);
 }
 
 .folder-card__top {
@@ -403,14 +349,14 @@ function onLeave() {
 
 .folder-card__index {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
   color: var(--gray-400);
 }
 
 .folder-card__arrow {
   color: var(--gray-400);
-  font-size: 1.05rem;
+  font-size: 0.9rem;
   line-height: 1;
 }
 
@@ -418,16 +364,16 @@ function onLeave() {
   position: relative;
   z-index: 1;
   font-family: var(--font-sans);
-  font-size: 1.35rem;
+  font-size: 1.05rem;
   font-weight: 700;
   line-height: 1.25;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   color: var(--gray-900);
   word-break: break-word;
 }
 
 .folder-card__suffix {
-  margin-left: 8px;
+  margin-left: 6px;
   font-weight: 400;
   letter-spacing: 0.01em;
   color: var(--gray-400);
@@ -437,8 +383,8 @@ function onLeave() {
   position: relative;
   z-index: 1;
   overflow: hidden;
-  font-size: 0.85rem;
-  line-height: 1.55;
+  font-size: 0.76rem;
+  line-height: 1.5;
   color: var(--gray-500);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -453,13 +399,12 @@ function onLeave() {
   z-index: 1;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 2px;
+  gap: 4px;
 }
 
 .folder-card__tag {
-  padding: 1px 8px;
-  font-size: 0.7rem;
+  padding: 0 6px;
+  font-size: 0.64rem;
   color: var(--gray-500);
   background: var(--gray-50);
   border: 1px solid var(--gray-100);
@@ -472,10 +417,10 @@ function onLeave() {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   margin-top: auto;
-  padding-top: 14px;
-  font-size: 0.75rem;
+  padding-top: 10px;
+  font-size: 0.68rem;
   color: var(--gray-400);
   border-top: 1px solid var(--gray-100);
 }
@@ -488,10 +433,10 @@ function onLeave() {
 /* 无封面时的装饰首字母 */
 .folder-card__ghost {
   position: absolute;
-  right: 14px;
-  bottom: 44px;
+  right: 8px;
+  bottom: 32px;
   z-index: 0;
-  font-size: 6.5rem;
+  font-size: 4.5rem;
   font-weight: 700;
   line-height: 0.8;
   letter-spacing: -0.05em;
@@ -501,16 +446,12 @@ function onLeave() {
 }
 
 @media (max-width: 640px) {
-  .folder-card {
-    gap: 10px;
-  }
-
   .folder-card__body {
-    padding: 18px;
+    padding: 12px 14px 14px;
   }
 
   .folder-card__name {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
 }
 </style>
