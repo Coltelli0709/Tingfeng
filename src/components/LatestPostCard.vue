@@ -77,8 +77,8 @@ function onEnter() {
 
   gsap.to(cardRef.value, {
     y: -4,
-    borderColor: '#93c5fd',
-    boxShadow: '0 24px 50px -20px rgba(37, 99, 235, 0.55)',
+    borderColor: '#9db8d0',
+    boxShadow: '0 18px 36px -16px rgba(31, 61, 96, 0.32)',
     duration: 0.3,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -86,7 +86,7 @@ function onEnter() {
 
   if (titleRef.value) {
     gsap.to(titleRef.value, {
-      color: '#dbeafe',
+      color: '#4f779e',
       duration: 0.25,
       ease: 'power1.out',
       overwrite: 'auto',
@@ -117,8 +117,8 @@ function onLeave() {
 
   gsap.to(cardRef.value, {
     y: 0,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    boxShadow: '0 18px 40px -22px rgba(30, 58, 95, 0.55)',
+    borderColor: '#c8d7e4',
+    boxShadow: '0 8px 22px -16px rgba(30, 58, 95, 0.28)',
     duration: 0.4,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -126,7 +126,7 @@ function onLeave() {
 
   if (titleRef.value) {
     gsap.to(titleRef.value, {
-      color: '#ffffff',
+      color: '#0f172a',
       duration: 0.3,
       ease: 'power1.out',
       overwrite: 'auto',
@@ -176,10 +176,10 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--white);
+  border: 1px solid #c8d7e4;
   border-radius: var(--radius-lg);
-  box-shadow: 0 18px 40px -22px rgba(30, 58, 95, 0.55);
+  box-shadow: 0 8px 22px -16px rgba(30, 58, 95, 0.28);
   will-change: transform;
 }
 
@@ -197,9 +197,9 @@ onBeforeUnmount(() => {
   padding: 3px 10px;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
-  color: #dbeafe;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--blue-700);
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
   border-radius: 100px;
 }
 
@@ -212,7 +212,7 @@ onBeforeUnmount(() => {
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.01em;
-  color: var(--white);
+  color: var(--gray-900);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
   font-size: 0.84rem;
   line-height: 1.6;
-  color: rgba(239, 246, 255, 0.72);
+  color: var(--gray-500);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -233,13 +233,13 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 8px;
   font-size: 0.74rem;
-  color: rgba(239, 246, 255, 0.55);
+  color: var(--gray-400);
 }
 
 .latest-card__meta > * + *::before {
   content: '·';
   margin-right: 8px;
-  color: rgba(239, 246, 255, 0.3);
+  color: var(--gray-300);
 }
 
 .latest-card__more {
@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
   padding-top: 10px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #dbeafe;
+  color: var(--blue-700);
 }
 
 .latest-card__arrow {
@@ -263,19 +263,7 @@ onBeforeUnmount(() => {
   min-width: 240px;
   max-width: 360px;
   overflow: hidden;
-  background: #1e3a5f;
-}
-
-.latest-card__cover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(30, 58, 95, 0.6),
-    rgba(30, 58, 95, 0) 45%
-  );
-  pointer-events: none;
+  background: var(--gray-100);
 }
 
 .latest-card__cover img {
@@ -308,14 +296,6 @@ onBeforeUnmount(() => {
     min-width: 0;
     max-width: none;
     aspect-ratio: 16 / 9;
-  }
-
-  .latest-card__cover::after {
-    background: linear-gradient(
-      0deg,
-      rgba(30, 58, 95, 0.5),
-      rgba(30, 58, 95, 0) 45%
-    );
   }
 }
 </style>

@@ -82,7 +82,7 @@ npm run build     # 构建产物在 dist/
 - vue-router (createWebHistory)
 - markdown-it
 - GSAP（页面动画）
-- Canvas（鱼群背景动画，鱼群会缓慢向鼠标靠拢）
+- Canvas（鱼群背景动画：小鱼分群游动，鱼群会缓慢向鼠标靠拢）
 - 不蒜子（访客统计）
 - GitHub Pages 部署 + GitHub Actions
 

@@ -26,6 +26,8 @@ interface BaseCreature {
   phase: number     // 动画相位（用于波动/游动）
   orbit: number     // 停在鼠标周围时的固定方位角
   angle: number     // 平滑后的朝向，避免速度抖动导致原地打转
+  school: number    // 小鱼群编号；非群游生物为 -1
+  calm: boolean     // 已靠近鼠标停靠点，允许降到更低速度
 }
 
 type Creature = BaseCreature
@@ -68,19 +70,27 @@ function initAll(w: number, h: number): Creature[] {
   const list: Creature[] = []
   const r = () => Math.random()
 
+  // 小鱼分成三个鱼群，围绕鼠标时也各自聚成团
   for (let i = 0; i < CLOWNFISH_COUNT; i++) {
     const depth = 0.15 + r() * 0.85
     const vx = (r() - 0.5) * 0.5
     const vy = (r() - 0.5) * 0.5
+    const school = i % 3
+    const anchorX = w * (0.22 + school * 0.28)
+    const anchorY = h * (0.35 + r() * 0.3)
+    const sector = (school / 3) * Math.PI * 2 + 0.4
     list.push({
       type: 'clownfish',
-      x: r() * w, y: r() * h,
+      x: anchorX + (r() - 0.5) * 90,
+      y: anchorY + (r() - 0.5) * 90,
       vx, vy,
       depth,
       size: 5 + depth * 7,
       phase: r() * Math.PI * 2,
-      orbit: r() * Math.PI * 2,
+      orbit: sector + (r() - 0.5) * 0.7,
       angle: Math.atan2(vy, vx),
+      school,
+      calm: false,
     })
   }
 
@@ -97,6 +107,8 @@ function initAll(w: number, h: number): Creature[] {
       phase: r() * Math.PI * 2,
       orbit: r() * Math.PI * 2,
       angle: Math.atan2(vy, vx),
+      school: -1,
+      calm: false,
     })
   }
 
@@ -113,6 +125,8 @@ function initAll(w: number, h: number): Creature[] {
       phase: r() * Math.PI * 2,
       orbit: r() * Math.PI * 2,
       angle: Math.atan2(vy, vx),
+      school: -1,
+      calm: false,
     })
   }
 
@@ -129,6 +143,8 @@ function initAll(w: number, h: number): Creature[] {
       phase: r() * Math.PI * 2,
       orbit: r() * Math.PI * 2,
       angle: Math.atan2(vy, vx),
+      school: -1,
+      calm: false,
     })
   }
 
@@ -154,7 +170,10 @@ function hardClamp(v: number, limit: number): number {
  * 到位后逐渐减速，避免所有鱼都绕着光标打转。
  */
 function attract(f: Creature, strength: number, radius: number) {
-  if (!pointer.active) return
+  if (!pointer.active) {
+    f.calm = false
+    return
+  }
 
   const ring = 55 + f.depth * 50
   const tx = pointer.x + Math.cos(f.orbit) * ring
@@ -162,6 +181,8 @@ function attract(f: Creature, strength: number, radius: number) {
   const dx = tx - f.x
   const dy = ty - f.y
   const d = Math.sqrt(dx * dx + dy * dy)
+  // 带滞回的距离判断，避免在临界点来回切换导致速度抖动
+  f.calm = d < (f.calm ? 90 : 65)
   if (d > radius) return
 
   // 进入停靠范围后只做轻微减速，不再施加向心力
@@ -195,17 +216,19 @@ function updateHeading(f: Creature, turn: number) {
 
 /** 统一处理最大/最小速度；低速时沿原朝向补速，避免方向乱跳 */
 function enforceSpeed(f: Creature, min: number, max: number) {
+  // 靠近光标时允许降速，否则最低速度会让鱼在停靠点附近反复抖动
+  const minSpeed = f.calm ? min * 0.3 : min
   const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
   if (sp > max) {
     f.vx = (f.vx / sp) * max
     f.vy = (f.vy / sp) * max
-  } else if (sp < min) {
+  } else if (sp < minSpeed) {
     if (sp < 0.001) {
-      f.vx = Math.cos(f.angle) * min
-      f.vy = Math.sin(f.angle) * min
+      f.vx = Math.cos(f.angle) * minSpeed
+      f.vy = Math.sin(f.angle) * minSpeed
     } else {
-      f.vx = (f.vx / sp) * min
-      f.vy = (f.vy / sp) * min
+      f.vx = (f.vx / sp) * minSpeed
+      f.vy = (f.vy / sp) * minSpeed
     }
   }
 }
@@ -219,23 +242,28 @@ function updateClownfish(f: Creature, list: Creature[], w: number, h: number) {
     if (o === f || o.type !== 'clownfish') continue
     const dx = o.x - f.x, dy = o.y - f.y
     const d = Math.sqrt(dx * dx + dy * dy)
+
+    // 所有小鱼之间保持间距，但结群只发生在同一鱼群内部
     if (d < SEP && d > 0) {
-      f.vx += (dx / d) * 0.055 * (1 - d / SEP)
-      f.vy += (dy / d) * 0.055 * (1 - d / SEP)
+      f.vx += (dx / d) * 0.04 * (1 - d / SEP)
+      f.vy += (dy / d) * 0.04 * (1 - d / SEP)
     }
+    if (o.school !== f.school) continue
+
     if (d < ALIGN) { avx += o.vx; avy += o.vy; av++ }
     if (d < COH) { ccx += o.x; ccy += o.y; cc++ }
   }
 
   if (av > 0) { avx /= av; avy /= av;
-    f.vx += (avx - f.vx) * 0.018; f.vy += (avy - f.vy) * 0.018 }
+    f.vx += (avx - f.vx) * 0.02; f.vy += (avy - f.vy) * 0.02 }
   if (cc > 0 && cc <= 15) { ccx /= cc; ccy /= cc;
-    f.vx += (ccx - f.x) * 0.004; f.vy += (ccy - f.y) * 0.004 }
+    f.vx += (ccx - f.x) * 0.005; f.vy += (ccy - f.y) * 0.005 }
   if (cc > 15) { ccx /= cc; ccy /= cc;
-    f.vx += (ccx - f.x) * 0.002; f.vy += (ccy - f.y) * 0.002 }
+    f.vx += (ccx - f.x) * 0.0025; f.vy += (ccy - f.y) * 0.0025 }
 
-  f.vx += (Math.random() - 0.5) * 0.02
-  f.vy += (Math.random() - 0.5) * 0.02
+  // 平滑的游动噪声：替代逐帧随机数，避免小鱼高频抖动
+  f.vx += Math.cos(f.phase * 0.7 + f.depth * 2) * 0.0035
+  f.vy += Math.sin(f.phase * 0.9 + f.depth * 3) * 0.0035
   f.vx += edgeForce(f.x, w, 0.3); f.vy += edgeForce(f.y, h, 0.3)
   attract(f, 0.008, 900)
 
@@ -250,8 +278,8 @@ function updateClownfish(f: Creature, list: Creature[], w: number, h: number) {
 
 function updateManta(f: Creature, w: number, h: number) {
   // 缓慢滑翔，大弧度转向
-  f.vx += (Math.random() - 0.5) * 0.012
-  f.vy += (Math.random() - 0.5) * 0.012
+  f.vx += Math.cos(f.phase * 0.55 + f.depth) * 0.0015
+  f.vy += Math.sin(f.phase * 0.7 + f.depth * 2) * 0.0015
   f.vx += edgeForce(f.x, w, 0.25); f.vy += edgeForce(f.y, h, 0.25)
   attract(f, 0.0045, 900)
 
@@ -268,7 +296,7 @@ function updateJellyfish(f: Creature, w: number, h: number) {
   // 上下浮动为主，微弱水平漂移
   const bob = Math.sin(time * 0.015 + f.phase) * 0.08
   f.vy += bob * 0.01
-  f.vx += (Math.random() - 0.5) * 0.006
+  f.vx += Math.cos(f.phase * 0.45 + f.depth * 2) * 0.001
   f.vx += edgeForce(f.x, w, 0.2)
   f.vy += edgeForce(f.y, h, 0.15)
   attract(f, 0.0025, 700)
@@ -284,8 +312,8 @@ function updateJellyfish(f: Creature, w: number, h: number) {
 
 function updateShark(f: Creature, w: number, h: number) {
   // 快速直行，偶尔偏转方向
-  f.vx += (Math.random() - 0.5) * 0.025
-  f.vy += (Math.random() - 0.5) * 0.025
+  f.vx += Math.cos(f.phase * 0.6 + f.depth) * 0.003
+  f.vy += Math.sin(f.phase * 0.8 + f.depth * 2) * 0.003
   f.vx += edgeForce(f.x, w, 0.4); f.vy += edgeForce(f.y, h, 0.35)
   attract(f, 0.0045, 900)
 
