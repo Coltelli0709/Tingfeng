@@ -17,6 +17,11 @@
           </p>
         </div>
 
+        <!-- 全站最新文章 -->
+        <div ref="latestRef" class="home__latest">
+          <LatestPostCard v-if="latestPost" :post="latestPost" />
+        </div>
+
         <div ref="foldersRef" class="folder-grid">
           <FolderCard
             v-for="(section, i) in allSectionMeta"
@@ -147,6 +152,7 @@ import {
 import CategoryTabs from '@/components/CategoryTabs.vue'
 import ArticleCard from '@/components/ArticleCard.vue'
 import FolderCard from '@/components/FolderCard.vue'
+import LatestPostCard from '@/components/LatestPostCard.vue'
 import FishSwarm from '@/components/FishSwarm.vue'
 
 const route = useRoute()
@@ -156,8 +162,12 @@ const heroRef = ref<HTMLElement>()
 const tabsRef = ref<HTMLElement>()
 const dateFilterRef = ref<HTMLElement>()
 const listRef = ref<InstanceType<typeof TransitionGroup>>()
+const latestRef = ref<HTMLElement>()
 const foldersRef = ref<HTMLElement>()
 const footerRef = ref<HTMLElement>()
+
+/* 全站最新文章（allPosts 已按日期降序） */
+const latestPost = computed(() => allPosts[0] ?? null)
 
 /* ---- 视图模式：无 section 参数 → 文件夹卡片总览；有 → 文章列表 ---- */
 const sectionQuery = computed(() => {
@@ -276,6 +286,7 @@ function animateIn() {
 
   const tabs = tabsRef.value
   const dateFilter = dateFilterRef.value
+  const latest = latestRef.value
   const footer = footerRef.value
   const items: HTMLElement[] = foldersRef.value
     ? (Array.from(foldersRef.value.children) as HTMLElement[])
@@ -285,7 +296,7 @@ function animateIn() {
 
   if (prefersReducedMotion()) {
     gsap.set(
-      [hero, tabs, dateFilter, footer, ...items].filter(Boolean),
+      [hero, tabs, dateFilter, latest, footer, ...items].filter(Boolean),
       { autoAlpha: 1, y: 0 },
     )
     return
@@ -296,6 +307,7 @@ function animateIn() {
   gsap.set(hero, { y: dist, autoAlpha: 0 })
   if (tabs) gsap.set(tabs, { y: dist * 0.6, autoAlpha: 0 })
   if (dateFilter) gsap.set(dateFilter, { y: dist * 0.5, autoAlpha: 0 })
+  if (latest) gsap.set(latest, { y: dist, autoAlpha: 0 })
   if (footer) gsap.set(footer, { autoAlpha: 0 })
   if (items.length) gsap.set(items, { y: dist, autoAlpha: 0 })
 
@@ -303,7 +315,8 @@ function animateIn() {
   tl.to(hero, { y: 0, autoAlpha: 1 })
   if (tabs) tl.to(tabs, { y: 0, autoAlpha: 1 }, '-=0.35')
   if (dateFilter) tl.to(dateFilter, { y: 0, autoAlpha: 1 }, '-=0.3')
-  if (items.length) tl.to(items, { y: 0, autoAlpha: 1, stagger: 0.07 }, '-=0.28')
+  if (latest) tl.to(latest, { y: 0, autoAlpha: 1 }, '-=0.32')
+  if (items.length) tl.to(items, { y: 0, autoAlpha: 1, stagger: 0.06 }, '-=0.25')
   if (footer) tl.to(footer, { autoAlpha: 1 }, '-=0.12')
 
   entrance = tl
