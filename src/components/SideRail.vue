@@ -285,7 +285,7 @@ onUnmounted(() => {
 <style scoped>
 .side-rail {
   position: fixed;
-  left: 24px;
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 200;
@@ -295,7 +295,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 136px;
+  width: 128px;
   padding: 8px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
@@ -567,8 +567,8 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* ===== 窄屏：功能栏移到屏幕底部中间 ===== */
-@media (max-width: 1023px) {
+/* ===== 较窄屏幕：功能栏移到屏幕底部中间，保证正文居中 ===== */
+@media (max-width: 1239px) {
   .side-rail {
     left: 50%;
     top: auto;

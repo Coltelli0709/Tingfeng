@@ -77,8 +77,8 @@ function onEnter() {
 
   gsap.to(cardRef.value, {
     y: -4,
-    borderColor: '#b3cfe8',
-    boxShadow: '0 24px 50px -20px rgba(61, 111, 159, 0.5)',
+    borderColor: '#93c5fd',
+    boxShadow: '0 24px 50px -20px rgba(37, 99, 235, 0.55)',
     duration: 0.3,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -86,7 +86,7 @@ function onEnter() {
 
   if (titleRef.value) {
     gsap.to(titleRef.value, {
-      color: '#e6f0fa',
+      color: '#dbeafe',
       duration: 0.25,
       ease: 'power1.out',
       overwrite: 'auto',
@@ -117,8 +117,8 @@ function onLeave() {
 
   gsap.to(cardRef.value, {
     y: 0,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    boxShadow: '0 18px 40px -22px rgba(53, 80, 110, 0.5)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 18px 40px -22px rgba(30, 58, 95, 0.55)',
     duration: 0.4,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -176,10 +176,10 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  background: linear-gradient(135deg, #35506e 0%, #3d6f9f 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
-  box-shadow: 0 18px 40px -22px rgba(53, 80, 110, 0.5);
+  box-shadow: 0 18px 40px -22px rgba(30, 58, 95, 0.55);
   will-change: transform;
 }
 
@@ -197,9 +197,9 @@ onBeforeUnmount(() => {
   padding: 3px 10px;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
-  color: #e6f0fa;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 100px;
 }
 
@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
   font-size: 0.84rem;
   line-height: 1.6;
-  color: rgba(245, 250, 255, 0.75);
+  color: rgba(239, 246, 255, 0.72);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -233,13 +233,13 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 8px;
   font-size: 0.74rem;
-  color: rgba(245, 250, 255, 0.6);
+  color: rgba(239, 246, 255, 0.55);
 }
 
 .latest-card__meta > * + *::before {
   content: '·';
   margin-right: 8px;
-  color: rgba(245, 250, 255, 0.34);
+  color: rgba(239, 246, 255, 0.3);
 }
 
 .latest-card__more {
@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
   padding-top: 10px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #e6f0fa;
+  color: #dbeafe;
 }
 
 .latest-card__arrow {
@@ -263,7 +263,7 @@ onBeforeUnmount(() => {
   min-width: 240px;
   max-width: 360px;
   overflow: hidden;
-  background: #35506e;
+  background: #1e3a5f;
 }
 
 .latest-card__cover::after {
@@ -272,8 +272,8 @@ onBeforeUnmount(() => {
   inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(53, 80, 110, 0.6),
-    rgba(53, 80, 110, 0) 45%
+    rgba(30, 58, 95, 0.6),
+    rgba(30, 58, 95, 0) 45%
   );
   pointer-events: none;
 }
@@ -313,8 +313,8 @@ onBeforeUnmount(() => {
   .latest-card__cover::after {
     background: linear-gradient(
       0deg,
-      rgba(53, 80, 110, 0.5),
-      rgba(53, 80, 110, 0) 45%
+      rgba(30, 58, 95, 0.5),
+      rgba(30, 58, 95, 0) 45%
     );
   }
 }

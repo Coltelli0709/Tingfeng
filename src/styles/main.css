@@ -3,14 +3,14 @@
    ============================================ */
 
 :root {
-  /* 蓝白主色系 */
-  --blue-900: #1e3a5f;
-  --blue-800: #1e40af;
-  --blue-700: #2563eb;
-  --blue-600: #3b82f6;
-  --blue-500: #60a5fa;
-  --blue-100: #dbeafe;
-  --blue-50: #eff6ff;
+  /* 蓝白主色系（低饱和灰蓝） */
+  --blue-900: #2f4a63;
+  --blue-800: #3d5f82;
+  --blue-700: #4f779e;
+  --blue-600: #6b91b5;
+  --blue-500: #8dabc8;
+  --blue-100: #dbe7f2;
+  --blue-50: #f2f7fb;
 
   /* 中性色 */
   --gray-900: #0f172a;
@@ -24,9 +24,9 @@
 
   /* 功能色 */
   --white: #ffffff;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-light: #eff6ff;
+  --accent: #4f779e;
+  --accent-hover: #3f6488;
+  --accent-light: #f2f7fb;
   --border: #e2e8f0;
 
   /* 排版 */

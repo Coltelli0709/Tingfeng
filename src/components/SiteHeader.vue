@@ -6,59 +6,29 @@
         <span ref="sepRef" class="site-header__sep">·</span>
         <span ref="taglineRef" class="site-header__tagline">Coltelli 的一隅自留地</span>
       </router-link>
-      <nav ref="navRef" class="site-header__nav">
-        <router-link
-          v-for="cat in navCategories"
-          :key="cat"
-          :to="cat === allLink ? `/?section=${ALL_SECTIONS}` : `/?section=${cat}`"
-          class="site-header__link"
-          :class="{ 'site-header__link--active': isActive(cat) }"
-        >
-          {{ cat }}
-        </router-link>
-      </nav>
+      <!-- 顶部导航暂时留空，版块切换由左侧栏/首页卡片承担 -->
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
 import gsap from 'gsap'
-import { allSections, ALL_SECTIONS } from '@/utils/posts'
-
-const allLink = '所有'
-
-const navCategories = computed(() => {
-  return [allLink, ...allSections]
-})
-
-const route = useRoute()
-
-function isActive(cat: string): boolean {
-  const s = route.query.section as string | undefined
-  // 无 section 参数时首页是卡片总览，导航不选中任何版块
-  if (!s) return false
-  if (cat === allLink) return s === ALL_SECTIONS
-  return s === cat
-}
 
 const headerRef = ref<HTMLElement>()
 const brandRef = ref<HTMLElement>()
 const sepRef = ref<HTMLElement>()
 const taglineRef = ref<HTMLElement>()
-const navRef = ref<HTMLElement>()
 
 onMounted(() => {
   const mm = gsap.matchMedia()
 
   mm.add('(prefers-reduced-motion: no-preference)', () => {
-    // 导航栏内部元素依次滑入
+    // 标题区内部元素依次滑入
     const tl = gsap.timeline({ defaults: { duration: 0.5, ease: 'power2.out' } })
     tl.from(brandRef.value, { y: -12, autoAlpha: 0 })
       .from(sepRef.value, { autoAlpha: 0 }, '-=0.3')
       .from(taglineRef.value, { x: -8, autoAlpha: 0 }, '-=0.25')
-      .from(navRef.value, { y: -8, autoAlpha: 0 }, '-=0.3')
 
     return () => tl.kill()
   })
@@ -87,8 +57,8 @@ onMounted(() => {
 .site-header__inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
+  max-width: 920px;
   height: 100%;
 }
 
@@ -116,38 +86,6 @@ onMounted(() => {
   font-size: 0.9rem;
   color: var(--gray-500);
   font-weight: 400;
-}
-
-.site-header__nav {
-  display: flex;
-  gap: 2px;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.site-header__nav::-webkit-scrollbar {
-  display: none;
-}
-
-.site-header__link {
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 0.875rem;
-  color: var(--gray-600);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.site-header__link:hover {
-  color: var(--blue-700);
-  background: var(--blue-50);
-}
-
-.site-header__link--active {
-  color: var(--blue-700);
-  background: var(--blue-50);
-  font-weight: 600;
 }
 
 @media (max-width: 900px) {

@@ -24,6 +24,8 @@ interface BaseCreature {
   depth: number     // 0–1，控制透明度和尺寸
   size: number      // 基础尺寸
   phase: number     // 动画相位（用于波动/游动）
+  orbit: number     // 停在鼠标周围时的固定方位角
+  angle: number     // 平滑后的朝向，避免速度抖动导致原地打转
 }
 
 type Creature = BaseCreature
@@ -68,49 +70,65 @@ function initAll(w: number, h: number): Creature[] {
 
   for (let i = 0; i < CLOWNFISH_COUNT; i++) {
     const depth = 0.15 + r() * 0.85
+    const vx = (r() - 0.5) * 0.5
+    const vy = (r() - 0.5) * 0.5
     list.push({
       type: 'clownfish',
       x: r() * w, y: r() * h,
-      vx: (r() - 0.5) * 0.5, vy: (r() - 0.5) * 0.5,
+      vx, vy,
       depth,
       size: 5 + depth * 7,
       phase: r() * Math.PI * 2,
+      orbit: r() * Math.PI * 2,
+      angle: Math.atan2(vy, vx),
     })
   }
 
   for (let i = 0; i < MANTA_COUNT; i++) {
     const depth = 0.2 + r() * 0.6
+    const vx = (r() - 0.5) * 0.2
+    const vy = (r() - 0.5) * 0.15
     list.push({
       type: 'manta',
       x: r() * w, y: r() * h,
-      vx: (r() - 0.5) * 0.2, vy: (r() - 0.5) * 0.15,
+      vx, vy,
       depth,
       size: 14 + depth * 12,
       phase: r() * Math.PI * 2,
+      orbit: r() * Math.PI * 2,
+      angle: Math.atan2(vy, vx),
     })
   }
 
   for (let i = 0; i < JELLY_COUNT; i++) {
     const depth = 0.15 + r() * 0.7
+    const vx = (r() - 0.5) * 0.08
+    const vy = (r() - 0.5) * 0.08
     list.push({
       type: 'jellyfish',
       x: r() * w, y: r() * h,
-      vx: (r() - 0.5) * 0.08, vy: (r() - 0.5) * 0.08,
+      vx, vy,
       depth,
       size: 10 + depth * 12,
       phase: r() * Math.PI * 2,
+      orbit: r() * Math.PI * 2,
+      angle: Math.atan2(vy, vx),
     })
   }
 
   for (let i = 0; i < SHARK_COUNT; i++) {
     const depth = 0.3 + r() * 0.5
+    const vx = (r() - 0.5) * 0.4
+    const vy = (r() - 0.5) * 0.3
     list.push({
       type: 'shark',
       x: r() * w, y: r() * h,
-      vx: (r() - 0.5) * 0.4, vy: (r() - 0.5) * 0.3,
+      vx, vy,
       depth,
       size: 22 + depth * 18,
       phase: r() * Math.PI * 2,
+      orbit: r() * Math.PI * 2,
+      angle: Math.atan2(vy, vx),
     })
   }
 
@@ -132,25 +150,63 @@ function hardClamp(v: number, limit: number): number {
 }
 
 /**
- * 缓慢游向鼠标：加速度很小，且随距离衰减；靠得太近时轻轻散开，
- * 避免所有生物都黏在光标上。
+ * 缓慢游向鼠标：每只生物在光标周围有一个固定停靠点，
+ * 到位后逐渐减速，避免所有鱼都绕着光标打转。
  */
 function attract(f: Creature, strength: number, radius: number) {
   if (!pointer.active) return
-  const dx = pointer.x - f.x
-  const dy = pointer.y - f.y
-  const d = Math.sqrt(dx * dx + dy * dy)
-  if (d < 0.001 || d > radius) return
 
-  const falloff = 1 - d / radius
+  const ring = 55 + f.depth * 50
+  const tx = pointer.x + Math.cos(f.orbit) * ring
+  const ty = pointer.y + Math.sin(f.orbit) * ring
+  const dx = tx - f.x
+  const dy = ty - f.y
+  const d = Math.sqrt(dx * dx + dy * dy)
+  if (d > radius) return
+
+  // 进入停靠范围后只做轻微减速，不再施加向心力
+  if (d < 18) {
+    f.vx *= 0.985
+    f.vy *= 0.985
+    return
+  }
+
+  // 距离越远引力越大，接近目标时逐渐减弱
+  const falloff = Math.min(1, (d - 18) / 70)
   const force = strength * falloff * (0.45 + f.depth * 0.55)
   f.vx += (dx / d) * force
   f.vy += (dy / d) * force
 
-  if (d < 70) {
-    const push = (1 - d / 70) * force * 2.2
-    f.vx -= (dx / d) * push
-    f.vy -= (dy / d) * push
+  if (d < 85) {
+    f.vx *= 0.985
+    f.vy *= 0.985
+  }
+}
+
+/** 平滑转向：速度方向抖动时不会让模型瞬间翻转 */
+function updateHeading(f: Creature, turn: number) {
+  const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
+  if (sp < 0.02) return
+  const target = Math.atan2(f.vy, f.vx)
+  let diff = target - f.angle
+  diff = Math.atan2(Math.sin(diff), Math.cos(diff))
+  f.angle += diff * turn
+}
+
+/** 统一处理最大/最小速度；低速时沿原朝向补速，避免方向乱跳 */
+function enforceSpeed(f: Creature, min: number, max: number) {
+  const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
+  if (sp > max) {
+    f.vx = (f.vx / sp) * max
+    f.vy = (f.vy / sp) * max
+  } else if (sp < min) {
+    if (sp < 0.001) {
+      f.vx = Math.cos(f.angle) * min
+      f.vy = Math.sin(f.angle) * min
+    } else {
+      f.vx = (f.vx / sp) * min
+      f.vy = (f.vy / sp) * min
+    }
   }
 }
 
@@ -184,13 +240,11 @@ function updateClownfish(f: Creature, list: Creature[], w: number, h: number) {
   attract(f, 0.008, 900)
 
   const ms = 0.55 + (1 - f.depth) * 0.25
-  const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
-  if (sp > ms) { f.vx = (f.vx / sp) * ms; f.vy = (f.vy / sp) * ms }
-  if (sp < 0.15) { f.vx = (f.vx / Math.max(sp, 0.01)) * 0.15
-    f.vy = (f.vy / Math.max(sp, 0.01)) * 0.15 }
+  enforceSpeed(f, 0.15, ms)
 
   f.x += f.vx; f.y += f.vy
   f.x = hardClamp(f.x, w); f.y = hardClamp(f.y, h)
+  updateHeading(f, 0.12)
   f.phase += 0.03
 }
 
@@ -202,13 +256,11 @@ function updateManta(f: Creature, w: number, h: number) {
   attract(f, 0.0045, 900)
 
   const ms = 0.3 + (1 - f.depth) * 0.15
-  const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
-  if (sp > ms) { f.vx = (f.vx / sp) * ms; f.vy = (f.vy / sp) * ms }
-  if (sp < 0.06) { f.vx = (f.vx / Math.max(sp, 0.01)) * 0.06
-    f.vy = (f.vy / Math.max(sp, 0.01)) * 0.06 }
+  enforceSpeed(f, 0.06, ms)
 
   f.x += f.vx; f.y += f.vy
   f.x = hardClamp(f.x, w); f.y = hardClamp(f.y, h)
+  updateHeading(f, 0.04)
   f.phase += 0.025
 }
 
@@ -222,11 +274,11 @@ function updateJellyfish(f: Creature, w: number, h: number) {
   attract(f, 0.0025, 700)
 
   const ms = 0.15 + (1 - f.depth) * 0.1
-  const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
-  if (sp > ms) { f.vx = (f.vx / sp) * ms; f.vy = (f.vy / sp) * ms }
+  enforceSpeed(f, 0, ms)
 
   f.x += f.vx; f.y += f.vy
   f.x = hardClamp(f.x, w); f.y = hardClamp(f.y, h)
+  updateHeading(f, 0.025)
   f.phase += 0.02
 }
 
@@ -238,20 +290,18 @@ function updateShark(f: Creature, w: number, h: number) {
   attract(f, 0.0045, 900)
 
   const ms = 0.7 + (1 - f.depth) * 0.2
-  const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
-  if (sp > ms) { f.vx = (f.vx / sp) * ms; f.vy = (f.vy / sp) * ms }
-  if (sp < 0.25) { f.vx = (f.vx / Math.max(sp, 0.01)) * 0.25
-    f.vy = (f.vy / Math.max(sp, 0.01)) * 0.25 }
+  enforceSpeed(f, 0.25, ms)
 
   f.x += f.vx; f.y += f.vy
   f.x = hardClamp(f.x, w); f.y = hardClamp(f.y, h)
+  updateHeading(f, 0.07)
   f.phase += 0.04
 }
 
 // ========== 绘制 ==========
 
 function drawClownfish(ctx: CanvasRenderingContext2D, f: Creature) {
-  const a = Math.atan2(f.vy, f.vx)
+  const a = f.angle
   const bl = f.size * 2.2, hl = bl / 2
   const bw = bl * 0.38
   const tailWag = Math.sin(time * 0.04 + f.phase) * 0.06
@@ -280,7 +330,7 @@ function drawClownfish(ctx: CanvasRenderingContext2D, f: Creature) {
 }
 
 function drawManta(ctx: CanvasRenderingContext2D, f: Creature) {
-  const a = Math.atan2(f.vy, f.vx)
+  const a = f.angle
   const bl = f.size * 2.5, hl = bl / 2
   const wingSpan = bl * 1.4
   const wingFlap = Math.sin(time * 0.02 + f.phase) * 0.12
@@ -318,7 +368,7 @@ function drawManta(ctx: CanvasRenderingContext2D, f: Creature) {
 }
 
 function drawJellyfish(ctx: CanvasRenderingContext2D, f: Creature) {
-  const a = Math.atan2(f.vy, f.vx)
+  const a = f.angle
   const bl = f.size * 2, hl = bl / 2
   const bw = bl * 0.8
   const pulse = 0.85 + Math.sin(time * 0.015 + f.phase) * 0.15  // 呼吸缩放
@@ -358,7 +408,7 @@ function drawJellyfish(ctx: CanvasRenderingContext2D, f: Creature) {
 }
 
 function drawShark(ctx: CanvasRenderingContext2D, f: Creature) {
-  const a = Math.atan2(f.vy, f.vx)
+  const a = f.angle
   const bl = f.size * 2.5, hl = bl / 2
   const bw = bl * 0.22        // 窄身
   const tailWag = Math.sin(time * 0.025 + f.phase) * 0.08

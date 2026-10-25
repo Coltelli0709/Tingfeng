@@ -357,7 +357,7 @@ onUnmounted(() => {
 
 /* 卡片总览用更宽的容器 */
 .home__content--wide {
-  max-width: 1040px;
+  max-width: 920px;
 }
 
 .home__hero {

@@ -27,17 +27,4 @@ import SideRail from '@/components/SideRail.vue'
 .app-main {
   flex: 1;
 }
-
-/* 宽屏：为左侧列表式功能栏预留空间，避免压住正文 */
-@media (min-width: 1024px) {
-  .app-main {
-    padding-left: 184px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .app-main {
-    padding-left: 208px;
-  }
-}
 </style>

@@ -266,7 +266,8 @@ function animateIn() {
   flex: 0 0 200px;
 }
 
-@media (max-width: 1023px) {
+/* 为左侧栏和居中正文让位：较窄屏幕隐藏右侧目录 */
+@media (max-width: 1365px) {
   .post-layout {
     display: block;
   }
