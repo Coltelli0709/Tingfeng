@@ -12,8 +12,7 @@
         <div ref="heroRef" class="home__hero">
           <h1 class="home__title">文章</h1>
           <p class="home__subtitle">
-            {{ allSectionMeta.length }} 个分类 · 共 {{ allPosts.length }} 篇
-            <span class="home__subtitle-note">按最后更新排序</span>
+            共 {{ allPosts.length }} 篇 · {{ allSectionMeta.length }} 个版块
           </p>
         </div>
 
@@ -22,12 +21,16 @@
           <LatestPostCard v-if="latestPost" :post="latestPost" />
         </div>
 
+        <div class="home__section-head">
+          <h2 class="home__section-title">全部分类</h2>
+          <span class="home__section-meta">按最近更新排序</span>
+        </div>
+
         <div ref="foldersRef" class="folder-grid">
           <FolderCard
-            v-for="(section, i) in allSectionMeta"
+            v-for="section in allSectionMeta"
             :key="section.name"
             :section="section"
-            :index="i"
           />
         </div>
       </template>
@@ -374,12 +377,26 @@ onUnmounted(() => {
   color: var(--gray-500);
 }
 
-.home__subtitle-note {
-  margin-left: 10px;
-  padding-left: 10px;
-  font-size: 0.8rem;
+/* ===== 分区标题 ===== */
+.home__section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 4px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.home__section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+.home__section-meta {
+  font-size: 0.74rem;
   color: var(--gray-400);
-  border-left: 1px solid var(--border);
 }
 
 .home__back {

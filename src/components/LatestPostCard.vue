@@ -77,8 +77,8 @@ function onEnter() {
 
   gsap.to(cardRef.value, {
     y: -4,
-    borderColor: '#93c5fd',
-    boxShadow: '0 16px 36px -18px rgba(37, 99, 235, 0.3)',
+    borderColor: '#b3cfe8',
+    boxShadow: '0 24px 50px -20px rgba(61, 111, 159, 0.5)',
     duration: 0.3,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -86,7 +86,7 @@ function onEnter() {
 
   if (titleRef.value) {
     gsap.to(titleRef.value, {
-      color: '#2563eb',
+      color: '#e6f0fa',
       duration: 0.25,
       ease: 'power1.out',
       overwrite: 'auto',
@@ -117,8 +117,8 @@ function onLeave() {
 
   gsap.to(cardRef.value, {
     y: 0,
-    borderColor: '#e2e8f0',
-    boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    boxShadow: '0 18px 40px -22px rgba(53, 80, 110, 0.5)',
     duration: 0.4,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -126,7 +126,7 @@ function onLeave() {
 
   if (titleRef.value) {
     gsap.to(titleRef.value, {
-      color: '#0f172a',
+      color: '#ffffff',
       duration: 0.3,
       ease: 'power1.out',
       overwrite: 'auto',
@@ -176,10 +176,10 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  background: var(--white);
-  border: 1px solid var(--border);
+  background: linear-gradient(135deg, #35506e 0%, #3d6f9f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  box-shadow: 0 18px 40px -22px rgba(53, 80, 110, 0.5);
   will-change: transform;
 }
 
@@ -188,31 +188,31 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   flex-direction: column;
   min-width: 0;
-  padding: 22px 26px;
+  padding: 20px 24px;
 }
 
 .latest-card__badge {
   align-self: flex-start;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding: 3px 10px;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
-  color: var(--blue-700);
-  background: var(--blue-50);
-  border: 1px solid var(--blue-100);
+  color: #e6f0fa;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 100px;
 }
 
 .latest-card__title {
   display: -webkit-box;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-family: var(--font-sans);
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.01em;
-  color: var(--gray-900);
+  color: var(--white);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -220,10 +220,10 @@ onBeforeUnmount(() => {
 .latest-card__desc {
   display: -webkit-box;
   overflow: hidden;
-  margin-bottom: 14px;
-  font-size: 0.88rem;
-  line-height: 1.65;
-  color: var(--gray-500);
+  margin-bottom: 10px;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: rgba(245, 250, 255, 0.75);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
@@ -233,13 +233,13 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 8px;
   font-size: 0.74rem;
-  color: var(--gray-400);
+  color: rgba(245, 250, 255, 0.6);
 }
 
 .latest-card__meta > * + *::before {
   content: '·';
   margin-right: 8px;
-  color: var(--gray-300);
+  color: rgba(245, 250, 255, 0.34);
 }
 
 .latest-card__more {
@@ -247,10 +247,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 5px;
   margin-top: auto;
-  padding-top: 14px;
-  font-size: 0.8rem;
+  padding-top: 10px;
+  font-size: 0.78rem;
   font-weight: 600;
-  color: var(--blue-700);
+  color: #e6f0fa;
 }
 
 .latest-card__arrow {
@@ -258,11 +258,24 @@ onBeforeUnmount(() => {
 }
 
 .latest-card__cover {
+  position: relative;
   flex: 0 0 38%;
   min-width: 240px;
   max-width: 360px;
   overflow: hidden;
-  background: var(--gray-100);
+  background: #35506e;
+}
+
+.latest-card__cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(53, 80, 110, 0.6),
+    rgba(53, 80, 110, 0) 45%
+  );
+  pointer-events: none;
 }
 
 .latest-card__cover img {
@@ -295,6 +308,14 @@ onBeforeUnmount(() => {
     min-width: 0;
     max-width: none;
     aspect-ratio: 16 / 9;
+  }
+
+  .latest-card__cover::after {
+    background: linear-gradient(
+      0deg,
+      rgba(53, 80, 110, 0.5),
+      rgba(53, 80, 110, 0) 45%
+    );
   }
 }
 </style>

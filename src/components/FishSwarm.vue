@@ -33,6 +33,29 @@ let animId = 0
 let creatures: Creature[] = []
 let time = 0
 
+/* 鼠标位置：鱼群会缓慢向光标靠拢 */
+const pointer = { x: 0, y: 0, active: false }
+
+function onPointerMove(e: PointerEvent) {
+  pointer.x = e.clientX
+  pointer.y = e.clientY
+  pointer.active = true
+}
+
+function onPointerEnter(e: MouseEvent) {
+  pointer.x = e.clientX
+  pointer.y = e.clientY
+  pointer.active = true
+}
+
+function onPointerLeave() {
+  pointer.active = false
+}
+
+function onWindowBlur() {
+  pointer.active = false
+}
+
 const SHARK_COUNT = 1
 const MANTA_COUNT = 2
 const JELLY_COUNT = 4
@@ -108,6 +131,29 @@ function hardClamp(v: number, limit: number): number {
   return v
 }
 
+/**
+ * 缓慢游向鼠标：加速度很小，且随距离衰减；靠得太近时轻轻散开，
+ * 避免所有生物都黏在光标上。
+ */
+function attract(f: Creature, strength: number, radius: number) {
+  if (!pointer.active) return
+  const dx = pointer.x - f.x
+  const dy = pointer.y - f.y
+  const d = Math.sqrt(dx * dx + dy * dy)
+  if (d < 0.001 || d > radius) return
+
+  const falloff = 1 - d / radius
+  const force = strength * falloff * (0.45 + f.depth * 0.55)
+  f.vx += (dx / d) * force
+  f.vy += (dy / d) * force
+
+  if (d < 70) {
+    const push = (1 - d / 70) * force * 2.2
+    f.vx -= (dx / d) * push
+    f.vy -= (dy / d) * push
+  }
+}
+
 function updateClownfish(f: Creature, list: Creature[], w: number, h: number) {
   const SEP = 25, ALIGN = 80, COH = 130
   let av = 0, avx = 0, avy = 0
@@ -135,6 +181,7 @@ function updateClownfish(f: Creature, list: Creature[], w: number, h: number) {
   f.vx += (Math.random() - 0.5) * 0.02
   f.vy += (Math.random() - 0.5) * 0.02
   f.vx += edgeForce(f.x, w, 0.3); f.vy += edgeForce(f.y, h, 0.3)
+  attract(f, 0.008, 900)
 
   const ms = 0.55 + (1 - f.depth) * 0.25
   const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
@@ -152,6 +199,7 @@ function updateManta(f: Creature, w: number, h: number) {
   f.vx += (Math.random() - 0.5) * 0.012
   f.vy += (Math.random() - 0.5) * 0.012
   f.vx += edgeForce(f.x, w, 0.25); f.vy += edgeForce(f.y, h, 0.25)
+  attract(f, 0.0045, 900)
 
   const ms = 0.3 + (1 - f.depth) * 0.15
   const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
@@ -171,6 +219,7 @@ function updateJellyfish(f: Creature, w: number, h: number) {
   f.vx += (Math.random() - 0.5) * 0.006
   f.vx += edgeForce(f.x, w, 0.2)
   f.vy += edgeForce(f.y, h, 0.15)
+  attract(f, 0.0025, 700)
 
   const ms = 0.15 + (1 - f.depth) * 0.1
   const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
@@ -186,6 +235,7 @@ function updateShark(f: Creature, w: number, h: number) {
   f.vx += (Math.random() - 0.5) * 0.025
   f.vy += (Math.random() - 0.5) * 0.025
   f.vx += edgeForce(f.x, w, 0.4); f.vy += edgeForce(f.y, h, 0.35)
+  attract(f, 0.0045, 900)
 
   const ms = 0.7 + (1 - f.depth) * 0.2
   const sp = Math.sqrt(f.vx * f.vx + f.vy * f.vy)
@@ -419,12 +469,22 @@ onMounted(() => {
   }
 
   window.addEventListener('resize', resizeHandler)
+
+  window.addEventListener('pointermove', onPointerMove, { passive: true })
+  document.documentElement.addEventListener('mouseenter', onPointerEnter)
+  document.documentElement.addEventListener('mouseleave', onPointerLeave)
+  window.addEventListener('blur', onWindowBlur)
 })
 
 onUnmounted(() => {
   cancelAnimationFrame(animId)
   stopLoop?.()
   if (resizeHandler) window.removeEventListener('resize', resizeHandler)
+
+  window.removeEventListener('pointermove', onPointerMove)
+  document.documentElement.removeEventListener('mouseenter', onPointerEnter)
+  document.documentElement.removeEventListener('mouseleave', onPointerLeave)
+  window.removeEventListener('blur', onWindowBlur)
 })
 </script>
 

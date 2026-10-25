@@ -1,5 +1,8 @@
 <template>
   <div class="post-page">
+    <!-- 灰蓝色竹影背景 -->
+    <BambooShadow />
+
     <div class="container post-page__container">
       <!-- 加载状态 -->
       <div v-if="loading" class="post-page__loading">
@@ -94,6 +97,7 @@ import { allPosts, getPostBySlug } from '@/utils/posts'
 import type { TocHeading } from '@/utils/toc'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
+import BambooShadow from '@/components/BambooShadow.vue'
 
 const route = useRoute()
 
@@ -240,6 +244,8 @@ function animateIn() {
 
 /* 文章 + 右侧目录 布局 */
 .post-page__container {
+  position: relative;
+  z-index: 1;
   max-width: 1160px;
 }
 

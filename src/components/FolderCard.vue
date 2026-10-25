@@ -23,37 +23,11 @@
       </div>
 
       <div class="folder-card__body">
-        <!-- 无封面时的大号首字母 / 装饰字 -->
-        <span
-          v-if="!hasCover"
-          ref="ghostRef"
-          class="folder-card__ghost"
-          aria-hidden="true"
-        >{{ ghost }}</span>
-
-        <div class="folder-card__top">
-          <span class="folder-card__index">{{ indexLabel }}</span>
-          <span ref="arrowRef" class="folder-card__arrow" aria-hidden="true">→</span>
-        </div>
-
-        <h2 class="folder-card__name">
-          {{ nameParts.main }}<span
-            v-if="nameParts.suffix"
-            class="folder-card__suffix"
-          >/ {{ nameParts.suffix }}</span>
-        </h2>
+        <h2 class="folder-card__name">{{ section.name }}</h2>
 
         <p class="folder-card__latest">
           <span class="folder-card__latest-label">最新文章：</span>{{ section.latestTitle }}
         </p>
-
-        <div v-if="section.categories.length" class="folder-card__tags">
-          <span
-            v-for="cat in section.categories.slice(0, 3)"
-            :key="cat"
-            class="folder-card__tag"
-          >{{ cat }}</span>
-        </div>
 
         <div class="folder-card__foot">
           <span>{{ section.postCount }} 篇</span>
@@ -73,14 +47,11 @@ import type { SectionMeta } from '@/utils/posts'
 
 const props = defineProps<{
   section: SectionMeta
-  index: number
 }>()
 
 const cardRef = ref<HTMLElement>()
 const coverImgRef = ref<HTMLImageElement>()
 const glowRef = ref<HTMLElement>()
-const arrowRef = ref<HTMLElement>()
-const ghostRef = ref<HTMLElement>()
 const coverBroken = ref(false)
 
 const hasCover = computed(() => !!props.section.cover && !coverBroken.value)
@@ -90,26 +61,13 @@ const to = computed(() => ({
   query: { section: props.section.name },
 }))
 
-const indexLabel = computed(() => String(props.index + 1).padStart(2, '0'))
-
-const nameParts = computed(() => {
-  const i = props.section.name.indexOf('-')
-  if (i <= 0) return { main: props.section.name, suffix: '' }
-  return {
-    main: props.section.name.slice(0, i),
-    suffix: props.section.name.slice(i + 1),
-  }
-})
-
-const ghost = computed(() => nameParts.value.main.charAt(0))
-
 const dateLabel = computed(() =>
   props.section.updatedAt ? props.section.updatedAt.replace(/-/g, '.') : '—',
 )
 
 /* ===== GSAP 交互 =====
  * - 只在前台支持动效时创建 quickTo / 光晕
- * - 悬浮：卡片抬升 + 封面缩放 + 箭头位移 + 光晕跟随
+ * - 悬浮：卡片抬升 + 封面缩放 + 光晕跟随
  */
 let mm: ReturnType<typeof gsap.matchMedia> | null = null
 let glowX: ((value: number) => unknown) | null = null
@@ -143,8 +101,6 @@ onBeforeUnmount(() => {
     cardRef.value,
     coverImgRef.value,
     glowRef.value,
-    arrowRef.value,
-    ghostRef.value,
   ].filter((el): el is HTMLElement => !!el)
   gsap.killTweensOf(els)
   mm?.revert()
@@ -164,8 +120,8 @@ function onEnter(e: PointerEvent) {
   // 整张卡片轻微抬升，并加强描边与投影
   gsap.to(cardRef.value, {
     y: -5,
-    borderColor: '#93c5fd',
-    boxShadow: '0 16px 32px -16px rgba(37, 99, 235, 0.35)',
+    borderColor: '#a9c4dc',
+    boxShadow: '0 18px 36px -16px rgba(61, 111, 159, 0.28)',
     duration: 0.3,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -180,32 +136,11 @@ function onEnter(e: PointerEvent) {
     })
   }
 
-  if (arrowRef.value) {
-    gsap.to(arrowRef.value, {
-      x: 5,
-      color: '#2563eb',
-      duration: 0.3,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    })
-  }
-
   if (glowRef.value) {
     gsap.to(glowRef.value, {
       opacity: 1,
       duration: 0.35,
       ease: 'power1.out',
-      overwrite: 'auto',
-    })
-  }
-
-  if (ghostRef.value) {
-    gsap.to(ghostRef.value, {
-      x: 8,
-      y: -6,
-      color: '#dbeafe',
-      duration: 0.5,
-      ease: 'power2.out',
       overwrite: 'auto',
     })
   }
@@ -217,7 +152,7 @@ function onLeave() {
   gsap.to(cardRef.value, {
     y: 0,
     borderColor: '#e2e8f0',
-    boxShadow: '0 0 0 rgba(0, 0, 0, 0)',
+    boxShadow: '0 8px 22px -16px rgba(30, 58, 95, 0.28)',
     duration: 0.4,
     ease: 'power2.out',
     overwrite: 'auto',
@@ -232,32 +167,11 @@ function onLeave() {
     })
   }
 
-  if (arrowRef.value) {
-    gsap.to(arrowRef.value, {
-      x: 0,
-      color: '#94a3b8',
-      duration: 0.35,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    })
-  }
-
   if (glowRef.value) {
     gsap.to(glowRef.value, {
       opacity: 0,
       duration: 0.4,
       ease: 'power1.out',
-      overwrite: 'auto',
-    })
-  }
-
-  if (ghostRef.value) {
-    gsap.to(ghostRef.value, {
-      x: 0,
-      y: 0,
-      color: '#f1f5f9',
-      duration: 0.45,
-      ease: 'power2.out',
       overwrite: 'auto',
     })
   }
@@ -281,14 +195,14 @@ function onLeave() {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  box-shadow: 0 8px 22px -16px rgba(30, 58, 95, 0.28);
   cursor: pointer;
   will-change: transform;
 }
 
 /* 无封面时，文字区撑起卡片高度 */
 .folder-card--text .folder-card__body {
-  min-height: 208px;
+  min-height: 128px;
 }
 
 /* ===== 封面（宽 4:高 3，与文字同属一张卡） ===== */
@@ -318,8 +232,8 @@ function onLeave() {
   height: 320px;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.16),
-    rgba(37, 99, 235, 0) 65%
+    rgba(85, 120, 156, 0.18),
+    rgba(85, 120, 156, 0) 65%
   );
   border-radius: 50%;
   opacity: 0;
@@ -334,57 +248,33 @@ function onLeave() {
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px 16px;
+  gap: 5px;
+  padding: 14px 16px 12px;
   overflow: hidden;
-}
-
-.folder-card__top {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.folder-card__index {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.12em;
-  color: var(--gray-400);
-}
-
-.folder-card__arrow {
-  color: var(--gray-400);
-  font-size: 0.9rem;
-  line-height: 1;
 }
 
 .folder-card__name {
   position: relative;
   z-index: 1;
+  overflow: hidden;
   font-family: var(--font-sans);
-  font-size: 1.05rem;
+  font-size: 0.84rem;
   font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: 0.02em;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
   color: var(--gray-900);
-  word-break: break-word;
-}
-
-.folder-card__suffix {
-  margin-left: 6px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: var(--gray-400);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .folder-card__latest {
   position: relative;
   z-index: 1;
   overflow: hidden;
-  font-size: 0.76rem;
-  line-height: 1.5;
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.35;
   color: var(--gray-500);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -392,23 +282,6 @@ function onLeave() {
 
 .folder-card__latest-label {
   color: var(--gray-400);
-}
-
-.folder-card__tags {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.folder-card__tag {
-  padding: 0 6px;
-  font-size: 0.64rem;
-  color: var(--gray-500);
-  background: var(--gray-50);
-  border: 1px solid var(--gray-100);
-  border-radius: 100px;
 }
 
 .folder-card__foot {
@@ -419,39 +292,20 @@ function onLeave() {
   justify-content: space-between;
   gap: 8px;
   margin-top: auto;
-  padding-top: 10px;
-  font-size: 0.68rem;
+  padding-top: 8px;
+  font-size: 0.66rem;
   color: var(--gray-400);
   border-top: 1px solid var(--gray-100);
 }
 
 .folder-card__date {
-  color: var(--blue-500);
+  color: #7f9cbb;
   font-feature-settings: 'tnum';
-}
-
-/* 无封面时的装饰首字母 */
-.folder-card__ghost {
-  position: absolute;
-  right: 8px;
-  bottom: 32px;
-  z-index: 0;
-  font-size: 4.5rem;
-  font-weight: 700;
-  line-height: 0.8;
-  letter-spacing: -0.05em;
-  color: var(--gray-100);
-  pointer-events: none;
-  user-select: none;
 }
 
 @media (max-width: 640px) {
   .folder-card__body {
-    padding: 12px 14px 14px;
-  }
-
-  .folder-card__name {
-    font-size: 1rem;
+    padding: 12px 14px;
   }
 }
 </style>
