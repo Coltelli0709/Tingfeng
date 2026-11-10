@@ -196,6 +196,18 @@
               {{ about.email }}
             </a>
           </li>
+          <li v-if="about.steam" class="about-item">
+            <span class="about-item__label">Steam</span>
+            <button
+              type="button"
+              class="about-item__value about-item__copy"
+              title="点击复制好友代码"
+              @click="copySteam"
+            >
+              <span class="about-item__code">{{ about.steam }}</span>
+              <span class="about-item__hint">{{ steamCopied ? '已复制' : '复制' }}</span>
+            </button>
+          </li>
         </ul>
       </section>
     </transition>
@@ -218,6 +230,8 @@ const isHome = computed(
 const showFriends = ref(false)
 const showAbout = ref(false)
 const broken = ref<string[]>([])
+const steamCopied = ref(false)
+let steamTimer: number | undefined
 
 // 路由变化时收起面板
 watch(
@@ -240,6 +254,27 @@ function toggleAbout() {
 
 function toTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+/* Steam 好友代码：点击复制（不支持 Clipboard API 时走 textarea 兜底） */
+async function copySteam() {
+  const code = about.steam
+  if (!code) return
+  try {
+    await navigator.clipboard.writeText(code)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = code
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    document.body.removeChild(ta)
+  }
+  steamCopied.value = true
+  window.clearTimeout(steamTimer)
+  steamTimer = window.setTimeout(() => (steamCopied.value = false), 1600)
 }
 
 function markBroken(name: string) {
@@ -279,6 +314,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', onDocClick)
   document.removeEventListener('keydown', onKey)
+  window.clearTimeout(steamTimer)
 })
 </script>
 
@@ -555,6 +591,40 @@ onUnmounted(() => {
 .about-item__value:hover {
   color: var(--accent-hover);
   text-decoration: underline;
+}
+
+/* Steam 好友代码：整行可点击复制 */
+.about-item__copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.about-item__copy:hover {
+  text-decoration: none;
+}
+
+.about-item__code {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.about-item__hint {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  color: var(--gray-400);
+  transition: color 0.2s;
+}
+
+.about-item__copy:hover .about-item__hint {
+  color: var(--accent-hover);
 }
 
 /* 过渡 */

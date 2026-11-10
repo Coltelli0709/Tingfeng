@@ -5,6 +5,7 @@
 
       github: GitHub 用户名（会自动拼成 https://github.com/用户名）
       email:  邮箱地址（点击会自动 mailto:）
+      steam:  Steam 好友代码（点击可复制）
       name:   显示的名字           （可留空）
       bio:    一句话简介           （可留空）
 
@@ -14,3 +15,4 @@
 ## About me
 github: Coltelli0709
 email: jian190928@163.com
+steam: 1125438059

@@ -11,6 +11,7 @@ export interface About {
   github?: string      // 用户名（@ 会被去掉）
   githubUrl?: string   // 完整链接
   email?: string
+  steam?: string       // Steam 好友代码（纯数字，页面点击复制）
 }
 
 // 项目根目录下的 md（Vite root = code/），取其中的 about.md
@@ -56,6 +57,9 @@ function parseAbout(raw: string): About {
       data.githubUrl = /^https?:/i.test(val) ? val : `https://github.com/${user}`
     } else if (key === 'email' || key === 'mail') {
       data.email = val
+    } else if (key === 'steam' || key === 'steamcode') {
+      // 兼容直接粘贴好友主页链接的情况，只保留其中的数字代码
+      data.steam = val.replace(/^.*\/(\d{6,})\/?$/, '$1').trim()
     }
   }
 
