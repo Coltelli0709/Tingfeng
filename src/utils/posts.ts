@@ -11,6 +11,8 @@
 export interface PostMeta {
   slug: string
   title: string
+  /** frontmatter 里是否真的写了 title（未写时 title 会回退成 slug） */
+  hasTitle: boolean
   date: string
   section: string       // 文件夹名 → 导航栏
   category: string      // frontmatter → 子分类标签
@@ -95,9 +97,12 @@ export const allPosts: PostWithContent[] = Object.entries(rawModules)
   .map(([path, raw]) => {
     const { section, slug } = parsePath(path)
     const { data, content } = parseFrontmatter(raw as string)
+    const frontTitle =
+      typeof data.title === 'string' ? data.title.trim() : ''
     return {
       slug,
-      title: (data.title as string) || slug,
+      title: frontTitle || slug,
+      hasTitle: !!frontTitle,
       date: (data.date as string) || '',
       section,
       category: (data.category as string) || section,

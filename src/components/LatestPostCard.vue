@@ -58,8 +58,8 @@ const showCategory = computed(
   () => !!props.post.category && props.post.category !== props.post.section,
 )
 
-// frontmatter 没写 title 时 posts.ts 会退回 slug；这种情况下用简介顶上
-const titleMissing = computed(() => props.post.title === props.post.slug)
+// 只有在 frontmatter 真的没写 title 时才退回简介，标题恰好等于 slug 不算缺失
+const titleMissing = computed(() => !props.post.hasTitle)
 const displayTitle = computed(() =>
   titleMissing.value
     ? props.post.description || props.post.title
