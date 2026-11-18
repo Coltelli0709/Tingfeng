@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "feed": "node scripts/gen-feed.mjs",
+    "predev": "npm run feed",
     "dev": "vite",
+    "prebuild": "npm run feed",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -12,7 +15,8 @@
     "vue": "^3.4.0",
     "vue-router": "^4.3.0",
     "markdown-it": "^14.0.0",
-    "gsap": "^3.12.0"
+    "gsap": "^3.12.0",
+    "@waline/client": "^3.5.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

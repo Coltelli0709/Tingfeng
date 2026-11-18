@@ -84,6 +84,9 @@
             :headings="headings"
           />
         </div>
+
+        <!-- 评论（Waline） -->
+        <CommentSection :path="`/blog/${post.slug}`" />
       </template>
     </div>
   </div>
@@ -98,6 +101,7 @@ import type { TocHeading } from '@/utils/toc'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
 import BambooShadow from '@/components/BambooShadow.vue'
+import CommentSection from '@/components/CommentSection.vue'
 
 const route = useRoute()
 

@@ -23,7 +23,9 @@ code/
 │   ├── utils/toc.ts           # 文章目录
 │   └── ...
 ├── public/
-│   └── images/                # 博客文章引用的图片放这里
+│   ├── images/                # 博客文章引用的图片放这里
+│   └── feed.xml               # 构建时自动生成（勿手改，已 gitignore）
+├── scripts/gen-feed.mjs       # 扫描 blog/ 生成 RSS 2.0 订阅源
 ├── package.json
 ├── vite.config.ts
 └── README.md
@@ -67,12 +69,39 @@ desc: 一句话介绍                  # 可留空
 
 放在 `public/images/` 下，文章里引用路径为 `/images/xxx.jpg`。
 
+## RSS 订阅
+
+首页右上角的「RSS」按钮打开订阅面板，可复制订阅地址：
+
+```
+https://llitecol.icu/feed.xml
+```
+
+订阅源是 RSS 2.0，收录全站最新 30 篇文章（含正文 HTML），按发布日期倒序。生成逻辑在 `scripts/gen-feed.mjs`：
+
+- 扫描 `blog/**/*.md`，读取与 `src/utils/posts.ts` 相同的 frontmatter 字段
+- `npm run dev` / `npm run build` 前会经 `predev` / `prebuild` 自动执行 `npm run feed`
+- 只想手动更新一次：`npm run feed`（产物在 `public/feed.xml`）
+- frontmatter 里写 `draft: true` 的文章不会进入 feed
+- 站点地址/简介改了，改 `scripts/gen-feed.mjs` 顶部的 `SITE` 对象
+
+## 评论（Waline）
+
+文章底部接的是 [Waline](https://waline.js.org/)，服务端跑在 Vercel 免费额度 + Neon 免费数据库上，不需要自己的服务器。
+
+- 部署步骤见仓库根目录 [`docs/WALINE.md`](../docs/WALINE.md)
+- 服务端部署好后，把地址填进 `src/utils/comments.ts` 的 `WALINE_SERVER_URL` 即可
+- 留空时评论区隐藏，开发环境会显示一行提示
+- 评论者只需填昵称，不用登录（`login: 'disable'`）
+- 依赖 `@waline/client`，拉代码后请先 `npm install`
+
 ## 本地开发
 
 ```bash
 npm install
 npm run dev       # 本地预览
 npm run build     # 构建产物在 dist/
+npm run feed      # 只重新生成 RSS（一般不用手动跑）
 ```
 
 ## 技术栈
@@ -81,6 +110,7 @@ npm run build     # 构建产物在 dist/
 - Vite 5
 - vue-router (createWebHistory)
 - markdown-it
+- Waline（评论，服务端 Vercel + Neon）
 - GSAP（页面动画）
 - Canvas（鱼群背景动画：小鱼分群游动，鱼群会缓慢向鼠标靠拢）
 - 不蒜子（访客统计）

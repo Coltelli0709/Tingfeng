@@ -16,3 +16,7 @@
 ## zeyi2
 url: broken.life
 desc: 亦师亦友的前辈！
+
+## 若则
+url: https://blog.chiyo.uk
+desc: 网名很多的朋友！
