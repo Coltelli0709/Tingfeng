@@ -154,14 +154,16 @@ watch(
   margin: 0.3em 0;
 }
 
+/* 行内反引号在中文散文里当强调标记用：加粗 + 极淡底色，不换字体、不缩字号、无边框 */
 .markdown-body :deep(code) {
-  font-family: var(--font-mono);
-  font-size: 0.88em;
-  padding: 2px 6px;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  padding: 0 3px;
   background: var(--blue-50);
-  border: 1px solid var(--blue-100);
-  border-radius: 4px;
-  color: var(--blue-800);
+  border: none;
+  border-radius: 3px;
+  color: var(--gray-900);
 }
 
 .markdown-body :deep(pre) {
@@ -176,9 +178,11 @@ watch(
 .markdown-body :deep(pre code) {
   font-family: var(--font-mono);
   font-size: 0.85rem;
+  font-weight: 400;
   padding: 0;
   background: transparent;
   border: none;
+  border-radius: 0;
   color: #e2e8f0;
 }
 
