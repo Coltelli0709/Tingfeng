@@ -19,6 +19,7 @@
           <time :datetime="post.date">{{ post.date }}</time>
           <span>{{ post.section }}</span>
           <span v-if="showCategory">{{ post.category }}</span>
+          <span>{{ wordLabel }}</span>
         </div>
 
         <span class="latest-card__more">
@@ -42,6 +43,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue'
 import gsap from 'gsap'
 import type { PostWithContent } from '@/utils/posts'
+import { formatWordCount } from '@/utils/textStats'
 
 const props = defineProps<{
   post: PostWithContent
@@ -54,6 +56,7 @@ const arrowRef = ref<HTMLElement>()
 const coverBroken = ref(false)
 
 const hasCover = computed(() => !!props.post.cover && !coverBroken.value)
+const wordLabel = computed(() => formatWordCount(props.post.wordCount))
 const showCategory = computed(
   () => !!props.post.category && props.post.category !== props.post.section,
 )

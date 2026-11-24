@@ -26,6 +26,7 @@
             <div class="post-article__meta">
               <time>{{ post.date }}</time>
               <span class="post-article__category">{{ post.category }}</span>
+              <span class="post-article__words">{{ wordLabel }}</span>
             </div>
             <h1 class="post-article__title">{{ post.title }}</h1>
             <div
@@ -97,6 +98,7 @@ import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import gsap from 'gsap'
 import { allPosts, getPostBySlug } from '@/utils/posts'
+import { formatWordCount } from '@/utils/textStats'
 import type { TocHeading } from '@/utils/toc'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
 import ArticleToc from '@/components/ArticleToc.vue'
@@ -121,6 +123,9 @@ const footerRef = ref<HTMLElement>()
 
 const showPostCover = computed(
   () => !!post.value?.cover && !postCoverBroken.value,
+)
+const wordLabel = computed(() =>
+  post.value ? formatWordCount(post.value.wordCount) : '',
 )
 
 const currentIndex = computed(() =>
@@ -303,6 +308,12 @@ function animateIn() {
   color: var(--blue-700);
   background: var(--blue-50);
   border-radius: 100px;
+}
+
+.post-article__words {
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  font-feature-settings: 'tnum';
 }
 
 .post-article__title {

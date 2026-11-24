@@ -8,6 +8,8 @@
  *   category → md 内 frontmatter 的 category（子分类标签）
  */
 
+import { countWords } from './textStats'
+
 export interface PostMeta {
   slug: string
   title: string
@@ -23,6 +25,8 @@ export interface PostMeta {
 
 export interface PostWithContent extends PostMeta {
   content: string
+  /** 正文字数（中文字符 + 英文单词），卡片与详情页展示用 */
+  wordCount: number
 }
 
 /** 首页分类卡片用：一个 blog/ 文件夹 = 一个版块 */
@@ -110,6 +114,7 @@ export const allPosts: PostWithContent[] = Object.entries(rawModules)
       description: (data.description as string) || '',
       tags: (Array.isArray(data.tags) ? data.tags : []) as string[],
       content,
+      wordCount: countWords(content),
     }
   })
   .sort((a, b) => b.date.localeCompare(a.date))

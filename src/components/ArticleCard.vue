@@ -15,6 +15,7 @@
       <div class="article-card__meta">
         <time class="article-card__date">{{ post.date }}</time>
         <span class="article-card__category">{{ post.category }}</span>
+        <span class="article-card__words">{{ wordLabel }}</span>
       </div>
       <h2 ref="titleRef" class="article-card__title">{{ post.title }}</h2>
       <p v-if="post.description" class="article-card__desc">
@@ -36,6 +37,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import gsap from 'gsap'
 import type { PostWithContent } from '@/utils/posts'
+import { formatWordCount } from '@/utils/textStats'
 
 const props = defineProps<{
   post: PostWithContent
@@ -47,6 +49,7 @@ const cardRef = ref<HTMLElement>()
 const titleRef = ref<HTMLElement>()
 
 const showCover = computed(() => !!props.post.cover && !coverBroken.value)
+const wordLabel = computed(() => formatWordCount(props.post.wordCount))
 
 function goPost() {
   router.push(`/blog/${props.post.slug}`)
@@ -127,6 +130,13 @@ function onLeave() {
 }
 
 .article-card__date {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  font-feature-settings: 'tnum';
+}
+
+.article-card__words {
+  margin-left: auto;
   font-size: 0.8125rem;
   color: var(--gray-400);
   font-feature-settings: 'tnum';
